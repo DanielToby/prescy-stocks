@@ -37,4 +37,8 @@ private:
 #define E_ERROR(...) ::prescy::Log::getLogger()->error(__VA_ARGS__)
 #define E_CRITICAL(...) ::prescy::Log::getLogger()->critical(__VA_ARGS__)
 
+#ifdef _WIN32
 #define API_CALL() E_TRACE("Called " __FUNCTION__ "() : " __FILE__ ":{}", __LINE__)
+#else
+#define API_CALL()
+#endif

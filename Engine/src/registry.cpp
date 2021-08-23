@@ -52,7 +52,7 @@ public:
     void writeRegistry() {
         E_TRACE("Writing to registry.");
         auto sb = rapidjson::StringBuffer{};
-        auto writer = rapidjson::Writer(sb);
+        auto writer = rapidjson::Writer<rapidjson::StringBuffer>(sb);
 
         writer.StartObject();
         writer.Key("stockQueries");

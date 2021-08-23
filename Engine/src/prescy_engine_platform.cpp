@@ -18,3 +18,12 @@ BOOL APIENTRY DllMain([[maybe_unused]] HMODULE hModule,
 }
 
 #endif
+
+#ifdef __APPLE__
+
+static void con() __attribute__((constructor));
+void con() {
+    prescy::Log::init();
+}
+
+#endif

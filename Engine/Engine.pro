@@ -8,7 +8,9 @@ DEFINES += \
     FMT_HEADER_ONLY \
     SPDLOG_FMT_EXTERNAL
 
-QMAKE_CXXFLAGS += /std:c++latest
+win32 {
+    QMAKE_CXXFLAGS += /std:c++latest
+}
 
 CONFIG += c++20
 
@@ -46,6 +48,7 @@ DEPENDPATH += \
     $$PWD/vendor/rapidjson-1.1.0/include \
     $$PWD/vendor/spdlog-1.9.0/include
 
+win32 {
 LIBS += \
     -L$$PWD/vendor/curl-7.70.0/lib -llibcurl_a \
     -lws2_32 \
@@ -53,3 +56,9 @@ LIBS += \
     -lcrypt32 \
     -ladvapi32 \
     -lnormaliz
+}
+
+macx {
+LIBS += \
+    -lcurl
+}

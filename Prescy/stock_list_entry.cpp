@@ -9,8 +9,8 @@ prescybase::StockListEntry::StockListEntry(const std::string& symbol, const std:
     QWidget{parent},
     _symbol{symbol},
     _range{range},
-    _chart{StockChart{this}},
-    _changedLabel(QLabel{"--", this}) {
+    _chart{this},
+    _changedLabel{"--", this} {
     auto rangeLabel = new QLabel{QString::fromStdString(range), this};
     rangeLabel->setMaximumWidth(50);
     rangeLabel->setAlignment(Qt::AlignCenter);
