@@ -1,6 +1,8 @@
 QT       += core gui widgets
 
-QMAKE_CXXFLAGS += /std:c++latest
+win32 {
+    QMAKE_CXXFLAGS += /std:c++latest
+}
 
 CONFIG += c++20
 
@@ -23,6 +25,9 @@ HEADERS += \
     stock_list_entry.hpp \
     stock_widget.hpp
 
+RESOURCES += \
+    resources.qrc
+
 #RELEASE / DEBUG
 CONFIG(debug, debug|release) {
     DEST_DIR = debug
@@ -30,14 +35,19 @@ CONFIG(debug, debug|release) {
     DEST_DIR = release
 }
 
+win32 {
 LIBS += \
     -L$$OUT_PWD/../Engine/$$DEST_DIR/ -lEngine
+}
 
-ENGINE.commands = $$quote(XCOPY "$$shell_path($$OUT_PWD/../Engine)" "$$shell_path($$OUT_PWD)" /c /s /d /y)
+macx {
+LIBS += \
+    -L$$OUT_PWD/../Engine/ -lEngine
+}
 
-QMAKE_EXTRA_TARGETS += ENGINE
+#ENGINE.commands = $$quote(XCOPY "$$shell_path($$OUT_PWD/../Engine)" "$$shell_path($$OUT_PWD)" /c /s /d /y)
 
-POST_TARGETDEPS += ENGINE
+#QMAKE_EXTRA_TARGETS += ENGINE
 
-RESOURCES += \
-    resources.qrc
+#POST_TARGETDEPS += ENGINE
+

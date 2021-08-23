@@ -27,7 +27,7 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
     _lastRefreshedLabel{this},
     _companyNames{},
     _symbolEdit{this} {
-    auto csvFile = QFile(":/resources/stocks/nasdaq_screener_1628640750060.csv");
+    QFile csvFile(":/resources/stocks/nasdaq_screener_1628640750060.csv");
     if (!csvFile.open(QIODevice::ReadOnly)) {
         qDebug("Error reading symbols");
     }

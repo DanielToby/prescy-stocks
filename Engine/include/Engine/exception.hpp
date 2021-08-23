@@ -5,8 +5,8 @@
 #include <stdexcept>
 
 
-#pragma warning(push)
-#pragma warning(disable : 4275)
+//#pragma warning(push)
+//#pragma warning(disable : 4275)
 
 namespace prescy {
 struct Prescy_Engine PrescyException : public std::runtime_error {
@@ -14,4 +14,4 @@ struct Prescy_Engine PrescyException : public std::runtime_error {
 };
 }
 
-#pragma warning(pop)
+//#pragma warning(pop)

@@ -38,7 +38,7 @@ void StockChart::paintEvent(QPaintEvent* event) {
             }
         }
 
-        auto painter = QPainter(this);
+        QPainter painter{this};
         painter.setRenderHint(QPainter::Antialiasing, true);
         painter.setPen(QPen(isNegative ? Qt::red : Qt::green, 2, Qt::SolidLine, Qt::RoundCap));
         painter.drawPath(path);

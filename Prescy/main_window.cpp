@@ -15,7 +15,7 @@ namespace prescybase {
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent) {
     setWindowTitle("Prescy");
-    setMinimumSize(1000, 800);
+    setMinimumSize(800, 500);
 
     auto dataDirectory = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/.prescy";
     if (!QDir(dataDirectory).exists()) {
