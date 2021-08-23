@@ -16,18 +16,18 @@ SOURCES += \
     src/exception.cpp \
     src/data_source/stock_data.cpp \
     src/data_source/stock_data_source.cpp \
+    src/data_source/stock_query.cpp \
     src/log.cpp \
     src/prescy_engine_platform.cpp \
-    src/registry.cpp \
-    src/stock_query.cpp
+    src/registry.cpp
 
 HEADERS += \
     include/Engine/data_source/stock_data.hpp \
     include/Engine/data_source/stock_data_source.hpp \
+    include/Engine/data_source/stock_query.hpp \
     include/Engine/prescy_engine_platform.hpp \
     include/Engine/exception.hpp \
-    include/Engine/registry.hpp \
-    include/Engine/stock_query.hpp
+    include/Engine/registry.hpp
 
 HEADERS += \
     src/log.hpp

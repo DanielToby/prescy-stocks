@@ -21,7 +21,7 @@ public:
             while (std::getline(registryFile, line)) {
                 json += line;
             }
-            rapidjson::Document doc;
+            auto doc = rapidjson::Document{};
             doc.Parse(json.c_str());
 
             auto check = [](bool condition, const char* error) {

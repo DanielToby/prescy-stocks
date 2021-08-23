@@ -22,11 +22,6 @@ MainWindow::MainWindow(QWidget* parent) :
         QDir().mkdir(dataDirectory);
     }
 
-    auto stocksDirectory = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/.prescy/stock_data";
-    if (!QDir(stocksDirectory).exists()) {
-        QDir().mkdir(stocksDirectory);
-    }
-
     auto homePage = new prescybase::StockWidget(this);
     setCentralWidget(homePage);
 }

@@ -4,21 +4,32 @@
 
 #include <curl/curl.h>
 #include <fmt/format.h>
+#include <rapidjson/document.h>
 
 #include <atomic>
-#include <filesystem>
-#include <fstream>
-#include <sstream>
+#include <memory>
 #include <thread>
 #include <unordered_map>
+
+namespace {
+std::size_t callBack(
+    const char* in,
+    std::size_t size,
+    std::size_t num,
+    std::string* out) {
+    const std::size_t totalBytes(size * num);
+    out->append(in, totalBytes);
+    return totalBytes;
+}
+}
 
 namespace prescy {
 class StockDataSource::impl {
 public:
     impl(const std::string& path) :
         _path{path},
-        _queries{},
-        _intervals{{"1d", "1h"},
+        _data{},
+        _intervals{{"1d", "1m"},
                    {"1w", "1h"},
                    {"1mo", "1d"},
                    {"3mo", "1d"},
@@ -26,65 +37,134 @@ public:
                    {"5yr", "1d"}} {
     }
 
-    std::string fileName(const StockQuery& query) {
-        return fmt::format("{0}/prescy_data__{1}_{2}.csv", _path, query.symbol, query.range);
-    }
-
     void addQuery(const StockQuery& query) {
         if (_intervals.find(query.range) == _intervals.end()) {
             throw PrescyException(fmt::format("Unknown range: '{}'.", query.range));
         }
-        _queries.emplace_back(query);
+        _data[query] = {};
     }
 
     void removeQuery(const StockQuery& query) {
-        _queries.erase(
-            std::remove_if(_queries.begin(),
-                           _queries.end(),
-                           [&query](const StockQuery& other) {
-                               return query.symbol == other.symbol && query.range == other.range;
-                           }),
-            _queries.end());
+        _data.erase(query);
+    }
+
+    std::vector<StockData> parseQueryResult(const std::string& json) {
+        auto data = std::vector<StockData>{};
+        auto doc = rapidjson::Document{};
+        doc.Parse(json.c_str());
+        auto check = [](bool condition, const char* error) {
+            if (!condition) {
+                throw PrescyException(error);
+            }
+        };
+
+        check(doc.IsObject(), "Result is not a json object.");
+        check(doc.HasMember("chart"), "No 'chart' object in json object.");
+        check(doc["chart"].HasMember("result"), "No 'result' object in 'chart'.");
+        check(doc["chart"]["result"].IsArray(), "'result' object is not an array.");
+        check(doc["chart"]["result"].Size() > 0, "'result' object is empty.");
+        auto& result = doc["chart"]["result"][0];
+
+        check(result.HasMember("timestamp"), "No 'timestamp' object in 'result'.");
+        auto& timeStamps = result["timestamp"];
+        check(timeStamps.IsArray(), "Invalid 'timestamps' object");
+        for (rapidjson::SizeType i = 0; i < timeStamps.Size(); ++i) {
+            check(timeStamps[i].IsInt(), "'timestamp' is not an integer.");
+            auto dataPoint = StockData{};
+            dataPoint.timeStamp = timeStamps[i].GetInt();
+            data.emplace_back(dataPoint);
+        }
+
+        check(result.HasMember("indicators"), "No 'indicators' object in 'result'[0].");
+        check(result["indicators"].HasMember("quote"), "No 'quote' object in 'indicators'");
+        check(result["indicators"]["quote"].IsArray(), "'quote' object is not an array.");
+        check(result["indicators"]["quote"].Size() > 0, "'result' object is empty.");
+        auto& quote = result["indicators"]["quote"][0];
+
+        check(quote.HasMember("close"), "No 'close' object in 'quote'[0].");
+        check(quote["close"].IsArray(), "'close' object is not an array");
+        auto& closes = quote["close"];
+        for (rapidjson::SizeType i = 0; i < closes.Size(); ++i) {
+            data[i].close = closes[i].GetDouble();
+        }
+
+        check(quote.HasMember("open"), "No 'open' object in 'quote'[0].");
+        check(quote["open"].IsArray(), "'open' object is not an array");
+        auto& opens = quote["open"];
+        for (rapidjson::SizeType i = 0; i < opens.Size(); ++i) {
+            data[i].open = opens[i].GetDouble();
+        }
+
+        check(quote.HasMember("volume"), "No 'volume' object in 'quote'[0].");
+        check(quote["volume"].IsArray(), "'volume' object is not an array");
+        auto& volumes = quote["volume"];
+        for (rapidjson::SizeType i = 0; i < volumes.Size(); ++i) {
+            data[i].volume = volumes[i].GetDouble();
+        }
+
+        check(quote.HasMember("low"), "No 'low' object in 'quote'[0].");
+        check(quote["low"].IsArray(), "'low' object is not an array");
+        auto& lows = quote["low"];
+        for (rapidjson::SizeType i = 0; i < lows.Size(); ++i) {
+            data[i].low = lows[i].GetDouble();
+        }
+
+        check(quote.HasMember("high"), "No 'high' object in 'quote'[0].");
+        check(quote["high"].IsArray(), "'high' object is not an array");
+        auto& highs = quote["high"];
+        for (rapidjson::SizeType i = 0; i < highs.Size(); ++i) {
+            data[i].high = highs[i].GetDouble();
+        }
+
+        E_INFO("Parsed {} data points from json result.", data.size());
+        return data;
     }
 
     void performQueries() {
-        if (_queries.size() > 0) {
+        if (_data.size() > 0) {
             auto numThreads = 8;
-            auto numQueries = static_cast<int>(_queries.size());
+            auto numQueries = static_cast<int>(_data.size());
             std::vector<std::vector<StockQuery>> threadQueries(numThreads);
-            for (std::size_t i = 0; i < _queries.size(); ++i) {
-                threadQueries[i % numThreads].emplace_back(_queries[i]);
+            auto i = 0;
+            for (const auto& query : _data) {
+                threadQueries[i % numThreads].emplace_back(query.first);
+                ++i;
             }
 
             std::atomic<int> queriesPerformed{0};
             auto workFn = [this, &threadQueries, &queriesPerformed](int threadNum) {
                 for (const auto& query : threadQueries[threadNum]) {
                     auto curl = curl_easy_init();
-                    if (curl) {
-                        auto url = fmt::format(
-                            "https://query1.finance.yahoo.com/v7/finance/download/{0}?"
-                            "range={1}&"
-                            "interval={2}&"
-                            "events=history&"
-                            "includeAdjustedClose=false",
-                            query.symbol,
-                            query.range,
-                            _intervals[query.range]);
-                        auto fp = fopen(fileName(query).c_str(), "wb");
-                        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-                        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, nullptr);
-                        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-                        auto result = curl_easy_perform(curl);
-                        if (result != CURLE_OK) {
-                            throw PrescyException(fmt::format("Curl error: {}.", result));
-                        }
-                        curl_easy_cleanup(curl);
-                        fclose(fp);
-                    } else {
-                        E_WARN("Failed to initialize curl in thread {}.", threadNum);
+                    if (!curl) {
+                        throw PrescyException(fmt::format("Failed to initialize curl in thread {}.", threadNum));
                     }
+                    auto response = 0;
+                    auto data = std::make_unique<std::string>();
+                    auto url = fmt::format(
+                        "https://query1.finance.yahoo.com/v7/finance/chart/{0}?"
+                        "&range={1}"
+                        "&interval={2}",
+                        query.symbol,
+                        query.range,
+                        _intervals[query.range]);
+
+                    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+                    curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+                    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
+                    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+                    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callBack);
+                    curl_easy_setopt(curl, CURLOPT_WRITEDATA, data.get());
+                    curl_easy_perform(curl);
+                    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+                    curl_easy_cleanup(curl);
+
+                    if (response != 200) {
+                        throw PrescyException(fmt::format("Curl query returned {}.", response));
+                    }
+                    _data[query] = parseQueryResult(*data.get());
                     ++queriesPerformed;
-                    E_INFO("Performed query {} - {} in thread {}", query.symbol, query.range, threadNum);
+
+                    E_INFO("Performed query ({} - {}) in thread {}.", query.symbol, query.range, threadNum);
                 }
             };
 
@@ -92,7 +172,7 @@ public:
             for (int i = 0; i < numThreads; ++i) {
                 threads.emplace_back(workFn, i);
             }
-            E_INFO("Started performing {} queries across {} threads.", _queries.size(), numThreads);
+            E_INFO("Started performing {} queries across {} threads.", _data.size(), numThreads);
 
             while (queriesPerformed < numQueries) {
                 ;
@@ -106,67 +186,15 @@ public:
     }
 
     std::vector<StockData> data(const StockQuery& query) {
-        // Yahoo finance intervals: [1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo]
-        auto data = std::vector<StockData>{};
-        auto file = fileName(query);
-        auto stream = std::ifstream{file};
-        if (stream.is_open()) {
-            auto line = std::string{};
-            std::getline(stream, line);
-
-            if (line != "Date,Open,High,Low,Close,Adj Close,Volume") {
-                auto what = line;
-                while (std::getline(stream, line)) {
-                    what += line;
-                }
-                stream.close();
-                throw PrescyException(what);
-            }
-
-            while (std::getline(stream, line)) {
-                auto lineStream = std::stringstream{line};
-                auto cell = std::string{};
-                auto stock = StockData{};
-                auto i = 0;
-                while (std::getline(lineStream, cell, ',')) {
-                    switch (i) {
-                    case (0):
-                        stock.date = cell;
-                        break;
-                    case (1):
-                        stock.open = std::stod(cell);
-                        break;
-                    case (2):
-                        stock.high = std::stod(cell);
-                        break;
-                    case (3):
-                        stock.low = std::stod(cell);
-                        break;
-                    case (4):
-                        stock.close = std::stod(cell);
-                        break;
-                    case (5):
-                        stock.adjacentClose = std::stod(cell);
-                        break;
-                    case (6):
-                        stock.volume = std::stod(cell);
-                        break;
-                    }
-                    ++i;
-                }
-                data.emplace_back(stock);
-            }
-            stream.close();
-        } else {
-            E_WARN("Data for query {}, {} not found.", query.symbol, query.range);
+        if (_data.find(query) == _data.end()) {
+            E_WARN("Data not found for query ({} - {}).", query.symbol, query.range);
+            return {};
         }
-        E_INFO("Fetched dataset with size {} from file '{}'.", data.size(), file);
-
-        return data;
+        return _data[query];
     }
 
     std::string _path;
-    std::vector<StockQuery> _queries;
+    std::unordered_map<StockQuery, std::vector<StockData>, StockQueryHashFunction> _data;
     std::unordered_map<std::string, std::string> _intervals;
 };
 

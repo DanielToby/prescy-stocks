@@ -2,7 +2,7 @@
 
 #include <Engine/prescy_engine_platform.hpp>
 #include <Engine/data_source/stock_data.hpp>
-#include <Engine/stock_query.hpp>
+#include <Engine/data_source/stock_query.hpp>
 
 #include <memory>
 #include <string>
@@ -20,7 +20,7 @@ public:
     void addQuery(const StockQuery& query);
     void removeQuery(const StockQuery& query);
     void performQueries();
-    std::vector<prescy::StockData> data(const StockQuery& query);
+    std::vector<StockData> data(const StockQuery& query);
 
 private:
     class impl;

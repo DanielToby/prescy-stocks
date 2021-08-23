@@ -7,14 +7,12 @@ namespace prescy {
 
 struct Prescy_Engine StockData {
     StockData();
-    std::string date;
+    int timeStamp;
     double open;
+    double close;
     double high;
     double low;
-    double close;
-    double adjacentClose;
     double volume;
-
 };
 
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Engine/prescy_engine_platform.hpp>
-#include <Engine/stock_query.hpp>
+#include <Engine/data_source/stock_query.hpp>
 
 #include <memory>
 #include <string>
