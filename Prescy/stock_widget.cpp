@@ -44,7 +44,7 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
     _symbolEdit.setMaximumWidth(300);
 
     auto addStockButton = new QPushButton{"Add Stock", this};
-    addStockButton->setIcon(QIcon(":/resources/icon/add.png"));
+    // addStockButton->setIcon(QIcon(":/resources/icon/add.png"));
     connect(addStockButton, &QPushButton::clicked, this, [this]() {
         auto addStockDialog = new QDialog(this);
         addStockDialog->setWindowTitle("Add Stock");
@@ -86,7 +86,7 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
         addStockDialog->show();
     });
     auto removeStock = new QPushButton{"Remove Stock", this};
-    removeStock->setIcon(QIcon(":/resources/icon/remove.png"));
+    // removeStock->setIcon(QIcon(":/resources/icon/remove.png"));
     connect(removeStock, &QPushButton::clicked, this, [this]() {
         if (_stocks.currentItem()) {
             try {

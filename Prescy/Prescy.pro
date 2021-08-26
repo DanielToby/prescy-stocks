@@ -1,10 +1,6 @@
 QT       += core gui widgets
 
-win32 {
-    QMAKE_CXXFLAGS += /std:c++latest
-}
-
-CONFIG += c++20
+CONFIG += c++17
 
 INCLUDEPATH += \
     $$PWD/../Engine/include

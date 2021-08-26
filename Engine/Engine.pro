@@ -8,11 +8,7 @@ DEFINES += \
     FMT_HEADER_ONLY \
     SPDLOG_FMT_EXTERNAL
 
-win32 {
-    QMAKE_CXXFLAGS += /std:c++latest
-}
-
-CONFIG += c++20
+CONFIG += c++17
 
 SOURCES += \
     src/exception.cpp \
