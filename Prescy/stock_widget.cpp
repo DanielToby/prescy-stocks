@@ -3,14 +3,14 @@
 #include <QComboBox>
 #include <QDialog>
 #include <QDialogButtonBox>
-#include <QDesktopServices>
 #include <QFile>
 #include <QGridLayout>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPlainTextEdit>
 #include <QPushButton>
 #include <QStandardPaths>
-#include <QPlainTextEdit>
+#include <QToolBar>
 
 #include <QDebug>
 #include <QDir>
@@ -22,7 +22,7 @@
 prescybase::StockWidget::StockWidget(QWidget* parent) :
     QWidget{parent},
     _registry{QStandardPaths::writableLocation(QStandardPaths::HomeLocation).toStdString() + "/.prescy/registry.json"},
-    _dataSource{QStandardPaths::writableLocation(QStandardPaths::HomeLocation).toStdString() + "/.prescy/stock_data"},
+    _dataSource{},
     _stocks{this},
     _timer{this},
     _lastRefreshed{0},
@@ -45,9 +45,10 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
     _symbolEdit.setVisible(false);
     _symbolEdit.setMaximumWidth(300);
 
-    auto addStockButton = new QPushButton{"Add Stock", this};
-    // addStockButton->setIcon(QIcon(":/resources/icon/add.png"));
-    connect(addStockButton, &QPushButton::clicked, this, [this]() {
+    QAction* addStockAction = new QAction(QIcon(":/resources/icon/add_stock.png"), "Add Stock", this);
+    addStockAction->setShortcuts(QKeySequence::New);
+    addStockAction->setStatusTip("Add a new stock");
+    connect(addStockAction, &QAction::triggered, this, [this]() {
         auto addStockDialog = new QDialog(this);
         addStockDialog->setWindowTitle("Add Stock");
 
@@ -87,9 +88,11 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
 
         addStockDialog->show();
     });
-    auto removeStockButton = new QPushButton{"Remove Stock", this};
-    // removeStock->setIcon(QIcon(":/resources/icon/remove.png"));
-    connect(removeStockButton, &QPushButton::clicked, this, [this]() {
+
+    QAction* removeStockAction = new QAction(QIcon(":/resources/icon/remove_stock.png"), "Remove Stock", this);
+    removeStockAction->setShortcuts(QKeySequence::Delete);
+    removeStockAction->setStatusTip("Remove the selected stock");
+    connect(removeStockAction, &QAction::triggered, this, [this]() {
         if (_stocks.currentItem()) {
             try {
                 auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.currentItem()));
@@ -104,9 +107,9 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
         }
     });
 
-    auto addIndicatorButton = new QPushButton{"Add Indicator", this};
-    // addStockButton->setIcon(QIcon(":/resources/icon/add.png"));
-    connect(addIndicatorButton, &QPushButton::clicked, this, [this]() {
+    QAction* addIndicatorAction = new QAction(QIcon(":/resources/icon/add_indicator.png"), "Add Indicator", this);
+    addIndicatorAction->setStatusTip("Add a new indicator");
+    connect(addIndicatorAction, &QAction::triggered, this, [this]() {
         auto addIndicatorDialog = new QDialog(this);
         addIndicatorDialog->setWindowTitle("Add Indicator");
         auto nameEdit = new QLineEdit(this);
@@ -143,11 +146,18 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
         addIndicatorDialog->setMinimumSize(400, 200);
         addIndicatorDialog->show();
     });
-    auto removeIndicatorButton = new QPushButton{"Remove Indicator", this};
-    // removeStock->setIcon(QIcon(":/resources/icon/remove.png"));
-    connect(removeIndicatorButton, &QPushButton::clicked, this, [this]() {
+
+    QAction* removeIndicatorAction = new QAction(QIcon(":/resources/icon/remove_indicator.png"), "Remove Indicator", this);
+    removeIndicatorAction->setStatusTip("Remove the selected indicator");
+    connect(removeIndicatorAction, &QAction::triggered, this, [this]() {
 
     });
+
+    auto toolBar = new QToolBar(this);
+    toolBar->addAction(addStockAction);
+    toolBar->addAction(removeStockAction);
+    toolBar->addAction(addIndicatorAction);
+    toolBar->addAction(removeIndicatorAction);
 
     connect(&_timer, &QTimer::timeout, this, [this]() {
         if (_lastRefreshed == 5) {
@@ -169,12 +179,10 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
     _stocks.setFocusPolicy(Qt::NoFocus);
 
     auto layout = new QGridLayout{this};
-    layout->addWidget(addStockButton, 0, 0, 1, 1);
-    layout->addWidget(removeStockButton, 0, 1, 1, 1);
-    layout->addWidget(addIndicatorButton, 0, 2, 1, 1);
-    layout->addWidget(removeIndicatorButton, 0, 3, 1, 1);
-    layout->addWidget(&_lastRefreshedLabel, 0, 3, 1, 1);
-    layout->addWidget(&_stocks, 1, 0, 1, 6);
+    layout->addWidget(toolBar, 0, 0, 1, 1);
+    layout->addWidget(&_lastRefreshedLabel, 0, 1, 1, 1);
+    layout->setAlignment(&_lastRefreshedLabel, Qt::AlignRight);
+    layout->addWidget(&_stocks, 1, 0, 1, 2);
 
     for (const auto& indicator : _registry.stockIndicators()) {
         addIndicator(indicator);
@@ -204,8 +212,7 @@ void prescybase::StockWidget::refreshStocks() {
     }
 }
 
-void prescybase::StockWidget::addStock(const prescy::StockQuery& query)
-{
+void prescybase::StockWidget::addStock(const prescy::StockQuery& query) {
     _dataSource.addQuery(query);
     _dataSource.performQueries();
 
@@ -221,8 +228,7 @@ void prescybase::StockWidget::addStock(const prescy::StockQuery& query)
     refreshStocks();
 }
 
-void prescybase::StockWidget::addIndicator(const prescy::StockIndicator &indicator)
-{
+void prescybase::StockWidget::addIndicator(const prescy::StockIndicator& indicator) {
     for (auto i = 0; i < _stocks.count(); ++i) {
         auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.item(i)));
         entry->addIndicator(indicator);

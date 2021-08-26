@@ -26,8 +26,7 @@ std::size_t callBack(
 namespace prescy {
 class StockDataSource::impl {
 public:
-    impl(const std::string& path) :
-        _path{path},
+    impl() :
         _data{},
         _intervals{{"1d", "1m"},
                    {"1w", "1h"},
@@ -195,13 +194,12 @@ public:
         return _data[query];
     }
 
-    std::string _path;
     std::unordered_map<StockQuery, std::vector<StockData>, StockQueryHashFunction> _data;
     std::unordered_map<std::string, std::string> _intervals;
 };
 
-StockDataSource::StockDataSource(const std::string& path) :
-    _impl{new impl{path}} {
+StockDataSource::StockDataSource() :
+    _impl{new impl{}} {
 }
 
 StockDataSource::~StockDataSource() = default;

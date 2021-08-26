@@ -60,7 +60,6 @@ void StockChart::paintEvent(QPaintEvent* event) {
                     negativeBoxesPath.moveTo(x, yClose);
                     negativeBoxesPath.lineTo(x, yOpen);
                 }
-
             }
         }
 

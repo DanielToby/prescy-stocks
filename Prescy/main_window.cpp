@@ -1,9 +1,9 @@
 #include "main_window.hpp"
 #include "stock_widget.hpp"
 
-#include <QMessageBox>
-#include <QLayout>
 #include <QDir>
+#include <QLayout>
+#include <QMessageBox>
 #include <QStandardPaths>
 
 #include <iostream>

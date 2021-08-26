@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Engine/prescy_engine_platform.hpp>
 #include <Engine/data_source/stock_data.hpp>
 #include <Engine/data_source/stock_query.hpp>
+#include <Engine/prescy_engine_platform.hpp>
 
 #include <memory>
 #include <string>
@@ -12,7 +12,7 @@ namespace prescy {
 
 class Prescy_Engine StockDataSource {
 public:
-    explicit StockDataSource(const std::string& path);
+    explicit StockDataSource();
     StockDataSource(const StockDataSource&) = delete;
     StockDataSource& operator=(const StockDataSource&) = delete;
     ~StockDataSource();

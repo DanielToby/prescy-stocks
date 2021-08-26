@@ -3,14 +3,14 @@
 #include "stock_list_entry.hpp"
 
 #include <Engine/data_source/stock_data_source.hpp>
-#include <Engine/stock_indicator.hpp>
 #include <Engine/registry.hpp>
+#include <Engine/stock_indicator.hpp>
 
 #include <QLabel>
 #include <QWidget>
 
-#include <QListWidget>
 #include <QComboBox>
+#include <QListWidget>
 #include <QTimer>
 
 #include <string>
