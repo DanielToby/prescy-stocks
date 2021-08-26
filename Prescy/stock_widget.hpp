@@ -3,6 +3,7 @@
 #include "stock_list_entry.hpp"
 
 #include <Engine/data_source/stock_data_source.hpp>
+#include <Engine/stock_indicator.hpp>
 #include <Engine/registry.hpp>
 
 #include <QLabel>
@@ -24,6 +25,7 @@ public:
 private:
     void refreshStocks();
     void addStock(const prescy::StockQuery& query);
+    void addIndicator(const prescy::StockIndicator& indicator);
 
     prescy::Registry _registry;
     prescy::StockDataSource _dataSource;
