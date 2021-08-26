@@ -8,11 +8,7 @@ DEFINES += \
     FMT_HEADER_ONLY \
     SPDLOG_FMT_EXTERNAL
 
-win32 {
-    QMAKE_CXXFLAGS += /std:c++latest
-}
-
-CONFIG += c++20
+CONFIG += c++17
 
 SOURCES += \
     src/exception.cpp \
@@ -21,7 +17,8 @@ SOURCES += \
     src/data_source/stock_query.cpp \
     src/log.cpp \
     src/prescy_engine_platform.cpp \
-    src/registry.cpp
+    src/registry.cpp \
+    src/stock_indicator.cpp
 
 HEADERS += \
     include/Engine/data_source/stock_data.hpp \
@@ -29,7 +26,8 @@ HEADERS += \
     include/Engine/data_source/stock_query.hpp \
     include/Engine/prescy_engine_platform.hpp \
     include/Engine/exception.hpp \
-    include/Engine/registry.hpp
+    include/Engine/registry.hpp \
+    include/Engine/stock_indicator.hpp
 
 HEADERS += \
     src/log.hpp

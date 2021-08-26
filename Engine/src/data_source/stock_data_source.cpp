@@ -34,7 +34,7 @@ public:
                    {"1mo", "1d"},
                    {"3mo", "1d"},
                    {"1yr", "1d"},
-                   {"5yr", "1d"}} {
+                   {"5yr", "1mo"}} {
     }
 
     void addQuery(const StockQuery& query) {
@@ -136,7 +136,8 @@ public:
                 for (const auto& query : threadQueries[threadNum]) {
                     auto curl = curl_easy_init();
                     if (!curl) {
-                        throw PrescyException(fmt::format("Failed to initialize curl in thread {}.", threadNum));
+                        E_ERROR("Failed to initialize curl in thread {}.", threadNum);
+                        return;
                     }
                     auto response = 0;
                     auto data = std::make_unique<std::string>();
@@ -159,7 +160,8 @@ public:
                     curl_easy_cleanup(curl);
 
                     if (response != 200) {
-                        throw PrescyException(fmt::format("Curl query returned {}.", response));
+                        E_ERROR("Curl query returned {}.", response);
+                        return;
                     }
                     _data[query] = parseQueryResult(*data.get());
                     ++queriesPerformed;

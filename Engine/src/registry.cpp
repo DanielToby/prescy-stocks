@@ -13,9 +13,12 @@ namespace prescy {
 class Registry::impl {
 public:
     impl(const std::string& path) :
-        _path{path} {
+        _path{path},
+        _stockQueries{},
+        _stockIndicators{} {
         auto registryFile = std::ifstream{_path};
         if (registryFile.is_open()) {
+            E_INFO(_path);
             auto json = std::string{};
             auto line = std::string{};
             while (std::getline(registryFile, line)) {
@@ -31,19 +34,26 @@ public:
             };
 
             check(doc.IsObject(), "Registry is not a json object.");
-            check(doc.HasMember("stockQueries"), "No 'stocks' object in registry.");
+            check(doc.HasMember("stockQueries"), "No 'stockQueries' object in registry.");
             auto& stocks = doc["stockQueries"];
-            check(stocks.IsArray(), "Invalid 'stocks' object");
+            check(stocks.IsArray(), "Invalid 'stockQueries' object");
             for (rapidjson::SizeType i = 0; i < stocks.Size(); ++i) {
                 auto& stock = stocks[i];
                 check(stock.HasMember("symbol"), "Invalid entry in stock registry");
-                auto symbol = stock["symbol"].GetString();
                 check(stock.HasMember("range"), "Invalid entry in stock registry");
-                auto range = stock["range"].GetString();
-
-                _stockQueries.emplace_back(symbol, range);
+                _stockQueries.emplace_back(stock["symbol"].GetString(), stock["range"].GetString());
             }
-            E_INFO("Identified {} stock queries, {} indicators in registry.", _stockQueries.size(), _indicators.size());
+            check(doc.HasMember("stockIndicators"), "No 'stockIndicators' object in registry.");
+            auto& indicators = doc["stockIndicators"];
+            check(indicators.IsArray(), "Invalid 'stockIndicators' object");
+            for (rapidjson::SizeType i = 0; i < indicators.Size(); ++i) {
+                auto& indicator = indicators[i];
+                check(indicator.HasMember("name"), "Invalid entry in stock registry");
+                check(indicator.HasMember("expression"), "Invalid entry in stock registry");
+                _stockIndicators.emplace_back(indicator["name"].GetString(), indicator["name"].GetString());
+            }
+
+            E_INFO("Identified {} stock queries, {} indicators in registry.", _stockQueries.size(), _stockIndicators.size());
         } else {
             E_INFO("Registry '{}' not found.", _path);
         }
@@ -57,13 +67,26 @@ public:
         writer.StartObject();
         writer.Key("stockQueries");
         writer.StartArray();
-        for (const auto& stock : _stockQueries) {
+        for (const auto& query : _stockQueries) {
             writer.StartObject();
 
             writer.Key("symbol");
-            writer.String(stock.symbol.c_str());
+            writer.String(query.symbol.c_str());
             writer.Key("range");
-            writer.String(stock.range.c_str());
+            writer.String(query.range.c_str());
+
+            writer.EndObject();
+        }
+        writer.EndArray();
+        writer.Key("stockIndicators");
+        writer.StartArray();
+        for (const auto& indicator : _stockIndicators) {
+            writer.StartObject();
+
+            writer.Key("name");
+            writer.String(indicator.name.c_str());
+            writer.Key("expression");
+            writer.String(indicator.expression.c_str());
 
             writer.EndObject();
         }
@@ -104,9 +127,32 @@ public:
         return _stockQueries;
     }
 
+    void addStockIndicator(const StockIndicator& indicator) {
+        _stockIndicators.emplace_back(indicator);
+        writeRegistry();
+    }
+
+    void removeStockIndicator(const StockIndicator& indicator) {
+        auto priorSize = _stockIndicators.size();
+        _stockIndicators.erase(
+            std::remove_if(_stockIndicators.begin(),
+                           _stockIndicators.end(),
+                           [&indicator](const StockIndicator& other) {
+                               return indicator.name == other.name;
+                           }),
+            _stockIndicators.end());
+        if (_stockIndicators.size() != priorSize) {
+            writeRegistry();
+        }
+    }
+
+    std::vector<StockIndicator> stockIndicators() {
+        return _stockIndicators;
+    }
+
     std::string _path;
     std::vector<StockQuery> _stockQueries;
-    std::vector<std::string> _indicators;
+    std::vector<StockIndicator> _stockIndicators;
 };
 
 Registry::Registry(const std::string& path) :
@@ -128,6 +174,24 @@ void Registry::removeStockQuery(const StockQuery& query) {
 std::vector<StockQuery> Registry::stockQueries() {
     API_CALL();
     return _impl->stockQueries();
+}
+
+void Registry::addStockIndicator(const StockIndicator &indicator)
+{
+    API_CALL();
+    _impl->addStockIndicator(indicator);
+}
+
+void Registry::removeStockIndicator(const StockIndicator &indicator)
+{
+    API_CALL();
+    _impl->removeStockIndicator(indicator);
+}
+
+std::vector<StockIndicator> Registry::stockIndicators()
+{
+    API_CALL();
+    return _impl->stockIndicators();
 }
 
 }
