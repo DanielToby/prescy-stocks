@@ -11,6 +11,7 @@ DEFINES += \
 CONFIG += c++17
 
 SOURCES += \
+    src/evaluator.cpp \
     src/exception.cpp \
     src/data_source/stock_data.cpp \
     src/data_source/stock_data_source.cpp \
@@ -24,6 +25,7 @@ HEADERS += \
     include/Engine/data_source/stock_data.hpp \
     include/Engine/data_source/stock_data_source.hpp \
     include/Engine/data_source/stock_query.hpp \
+    include/Engine/evaluator.hpp \
     include/Engine/prescy_engine_platform.hpp \
     include/Engine/exception.hpp \
     include/Engine/registry.hpp \
@@ -36,6 +38,7 @@ INCLUDEPATH += \
     $$PWD/include \
     $$PWD/vendor/curl-7.70.0/include \
     $$PWD/vendor/fmt-8.0.1/include \
+    $$PWD/vendor/lua-5.1.4/include \
     $$PWD/vendor/rapidjson-1.1.0/include \
     $$PWD/vendor/spdlog-1.9.0/include
 
@@ -53,10 +56,16 @@ LIBS += \
     -lwldap32 \
     -lcrypt32 \
     -ladvapi32 \
-    -lnormaliz
+    -lnormaliz \
+    -L$$PWD/vendor/lua-5.1.4/lib -llua5.1
 }
 
 macx {
 LIBS += \
     -lcurl
 }
+
+LUA_BIN.commands = $$quote(XCOPY "$$shell_path($$PWD/vendor/lua/lua-5.1.4_Win64_dll12_lib/bin)" "$$shell_path($$OUT_PWD)" /c /s /d /y)
+
+QMAKE_EXTRA_TARGETS += LUA_BIN
+POST_TARGETDEPS += LUA_BIN
