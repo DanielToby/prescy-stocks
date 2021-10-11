@@ -13,9 +13,8 @@ struct Prescy_Engine StockIndicator {
     std::string expression;
 };
 
-struct StockIndicatorHashFunction {
+struct Prescy_Engine StockIndicatorHashFunction {
     std::size_t operator()(const StockIndicator& query) const;
 };
-
 
 }

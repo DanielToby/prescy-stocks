@@ -13,7 +13,9 @@
         <file>resources/font/Roboto-Thin.ttf</file>
         <file>resources/font/Roboto-ThinItalic.ttf</file>
         <file>resources/stocks/nasdaq_screener_1628640750060.csv</file>
-        <file>resources/icon/add.png</file>
-        <file>resources/icon/remove.png</file>
+        <file>resources/icon/add_indicator.png</file>
+        <file>resources/icon/add_stock.png</file>
+        <file>resources/icon/remove_indicator.png</file>
+        <file>resources/icon/remove_stock.png</file>
     </qresource>
 </RCC>

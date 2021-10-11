@@ -59,8 +59,7 @@ void prescybase::StockListEntry::setData(const std::vector<prescy::StockData>& d
     }
 }
 
-void prescybase::StockListEntry::addIndicator(const prescy::StockIndicator& indicator)
-{
+void prescybase::StockListEntry::addIndicator(const prescy::StockIndicator& indicator) {
     auto label = new QLabel("--", this);
     label->setMaximumWidth(100);
     label->setAlignment(Qt::AlignCenter);
@@ -68,19 +67,16 @@ void prescybase::StockListEntry::addIndicator(const prescy::StockIndicator& indi
     _indicators[indicator] = label;
 }
 
-void prescybase::StockListEntry::removeIndicator(const prescy::StockIndicator& indicator)
-{
+void prescybase::StockListEntry::removeIndicator(const prescy::StockIndicator& indicator) {
     auto label = _indicators[indicator];
     this->layout()->removeWidget(label);
     _indicators.erase(indicator);
 }
 
-std::string prescybase::StockListEntry::symbol()
-{
+std::string prescybase::StockListEntry::symbol() {
     return _symbol;
 }
 
-std::string prescybase::StockListEntry::range()
-{
+std::string prescybase::StockListEntry::range() {
     return _range;
 }

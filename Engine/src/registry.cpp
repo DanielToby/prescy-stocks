@@ -176,20 +176,17 @@ std::vector<StockQuery> Registry::stockQueries() {
     return _impl->stockQueries();
 }
 
-void Registry::addStockIndicator(const StockIndicator &indicator)
-{
+void Registry::addStockIndicator(const StockIndicator& indicator) {
     API_CALL();
     _impl->addStockIndicator(indicator);
 }
 
-void Registry::removeStockIndicator(const StockIndicator &indicator)
-{
+void Registry::removeStockIndicator(const StockIndicator& indicator) {
     API_CALL();
     _impl->removeStockIndicator(indicator);
 }
 
-std::vector<StockIndicator> Registry::stockIndicators()
-{
+std::vector<StockIndicator> Registry::stockIndicators() {
     API_CALL();
     return _impl->stockIndicators();
 }
