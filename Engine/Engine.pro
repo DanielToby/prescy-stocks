@@ -37,7 +37,7 @@ HEADERS += \
 INCLUDEPATH += \
     $$PWD/include \
     $$PWD/vendor/curl-7.70.0/include \
-    $$PWD/vendor/fmt-8.0.1/include \
+    $$PWD/../vendor/fmt-8.0.1/include \
     $$PWD/vendor/lua-5.1.4/include \
     $$PWD/vendor/rapidjson-1.1.0/include \
     $$PWD/vendor/spdlog-1.9.0/include
@@ -45,7 +45,8 @@ INCLUDEPATH += \
 DEPENDPATH += \
     $$PWD/include \
     $$PWD/vendor/curl-7.70.0/include \
-    $$PWD/vendor/fmt-8.0.1/include \
+    $$PWD/../vendor/fmt-8.0.1/include \
+    $$PWD/vendor/lua-5.1.4/include \
     $$PWD/vendor/rapidjson-1.1.0/include \
     $$PWD/vendor/spdlog-1.9.0/include
 
@@ -57,15 +58,17 @@ LIBS += \
     -lcrypt32 \
     -ladvapi32 \
     -lnormaliz \
-    -L$$PWD/vendor/lua-5.1.4/lib -llua5.1
+    -L$$PWD/vendor/lua-5.1.4/windows/lib -llua5.1
+
+LUA_BIN.commands = $$quote(XCOPY "$$shell_path($$PWD/vendor/lua-5.1.4/windows/bin)" "$$shell_path($$OUT_PWD)" /c /s /d /y)
+
+QMAKE_EXTRA_TARGETS += LUA_BIN
+POST_TARGETDEPS += LUA_BIN
 }
 
 macx {
 LIBS += \
-    -lcurl
+    -lcurl \
+    -L$$PWD/vendor/lua-5.1.4/macos/lib -llua
 }
 
-LUA_BIN.commands = $$quote(XCOPY "$$shell_path($$PWD/vendor/lua/lua-5.1.4_Win64_dll12_lib/bin)" "$$shell_path($$OUT_PWD)" /c /s /d /y)
-
-QMAKE_EXTRA_TARGETS += LUA_BIN
-POST_TARGETDEPS += LUA_BIN

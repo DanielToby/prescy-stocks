@@ -22,7 +22,7 @@ public:
     std::vector<StockQuery> stockQueries();
 
     void addStockIndicator(const StockIndicator& indicator);
-    void removeStockIndicator(const StockIndicator& indicator);
+    void removeStockIndicator(const std::string& name);
     std::vector<StockIndicator> stockIndicators();
 
 private:

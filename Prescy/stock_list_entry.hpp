@@ -26,7 +26,7 @@ public:
                    QWidget* parent = 0);
     void setData(const std::vector<prescy::StockData>& data);
     void addIndicator(const prescy::StockIndicator& indicator);
-    void removeIndicator(const prescy::StockIndicator& indicator);
+    void removeIndicator(const std::string& name);
 
     std::string symbol();
     std::string range();

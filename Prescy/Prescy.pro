@@ -1,12 +1,16 @@
 QT       += core gui widgets
 
+DEFINES += FMT_HEADER_ONLY
+
 CONFIG += c++17
 
 INCLUDEPATH += \
-    $$PWD/../Engine/include
+    $$PWD/../Engine/include \
+    $$PWD/../vendor/fmt-8.0.1/include
 
 DEPENDPATH += \
-    $$PWD/../Engine/include
+    $$PWD/../Engine/include \
+    $$PWD/../vendor/fmt-8.0.1/include
 
 SOURCES += \
     main.cpp \

@@ -1,5 +1,9 @@
 #include "stock_list_entry.hpp"
 
+#include <Engine/evaluator.hpp>
+#include <Engine/exception.hpp>
+#include <fmt/format.h>
+
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QString>
@@ -44,16 +48,13 @@ void prescybase::StockListEntry::setData(const std::vector<prescy::StockData>& d
     _chart.setData(data);
     if (data.size() > 1) {
         for (const auto& [indicator, label] : _indicators) {
-            // get result of lua expression
-            // set indicator color and label
-            if (indicator.expression == "percentChange") {
-                auto percentChanged = (data[data.size() - 1].close - data[0].open) / data[0].open * 100;
-                if (percentChanged < 0) {
-                    label->setStyleSheet("color: red");
-                } else {
-                    label->setStyleSheet("color: lightGreen");
-                }
-                label->setText(percentChanged > 0 ? "+" + QString::number(percentChanged, 'g', 5) + "%" : QString::number(percentChanged) + "%");
+            try {
+                auto result = prescy::evaluateExpression(data, indicator.expression);
+                result < 0 ? label->setStyleSheet("color: red") : label->setStyleSheet("color: lightGreen");
+                label->setText(result > 0 ? "+" + QString::number(result, 'g', 5) + "%" : QString::number(result) + "%");
+            } catch (prescy::PrescyException& e) {
+                label->setText("--");
+                qDebug("%s\n", e.what());
             }
         }
     }
@@ -61,16 +62,21 @@ void prescybase::StockListEntry::setData(const std::vector<prescy::StockData>& d
 
 void prescybase::StockListEntry::addIndicator(const prescy::StockIndicator& indicator) {
     auto label = new QLabel("--", this);
+    auto toolTip = fmt::format("{}<br/><br/>{}", indicator.name, indicator.expression);
+    label->setToolTip(QString::fromStdString(toolTip));
     label->setMaximumWidth(100);
     label->setAlignment(Qt::AlignCenter);
     this->layout()->addWidget(label);
     _indicators[indicator] = label;
 }
 
-void prescybase::StockListEntry::removeIndicator(const prescy::StockIndicator& indicator) {
-    auto label = _indicators[indicator];
-    this->layout()->removeWidget(label);
-    _indicators.erase(indicator);
+void prescybase::StockListEntry::removeIndicator(const std::string& name) {
+    for (auto iterator = _indicators.begin(); iterator != _indicators.end(); ++iterator) {
+        if (iterator->first.name == name) {
+            this->layout()->removeWidget(iterator->second);
+            _indicators.erase(iterator);
+        }
+    }
 }
 
 std::string prescybase::StockListEntry::symbol() {
