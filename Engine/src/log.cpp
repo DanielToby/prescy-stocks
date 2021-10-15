@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-namespace prescy {
+namespace prescyengine {
 
 std::shared_ptr<spdlog::logger> Log::s_Logger = nullptr;
 

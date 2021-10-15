@@ -12,7 +12,7 @@
 prescybase::StockListEntry::StockListEntry(const std::string& symbol,
                                            const std::string& name,
                                            const std::string& range,
-                                           const std::vector<prescy::StockIndicator> indicators,
+                                           const std::vector<prescyengine::StockIndicator> indicators,
                                            QWidget* parent) :
     QWidget{parent},
     _symbol{symbol},
@@ -44,15 +44,15 @@ prescybase::StockListEntry::StockListEntry(const std::string& symbol,
     setLayout(layout);
 }
 
-void prescybase::StockListEntry::setData(const std::vector<prescy::StockData>& data) {
+void prescybase::StockListEntry::setData(const std::vector<prescyengine::StockData>& data) {
     _chart.setData(data);
     if (data.size() > 1) {
         for (const auto& [indicator, label] : _indicators) {
             try {
-                auto result = prescy::evaluateExpression(data, indicator.expression);
+                auto result = prescyengine::evaluateExpression(data, indicator.expression);
                 result < 0 ? label->setStyleSheet("color: red") : label->setStyleSheet("color: lightGreen");
                 label->setText(result > 0 ? "+" + QString::number(result, 'g', 5) + "%" : QString::number(result) + "%");
-            } catch (prescy::PrescyException& e) {
+            } catch (prescyengine::PrescyException& e) {
                 label->setText("--");
                 qDebug("%s\n", e.what());
             }
@@ -60,7 +60,7 @@ void prescybase::StockListEntry::setData(const std::vector<prescy::StockData>& d
     }
 }
 
-void prescybase::StockListEntry::addIndicator(const prescy::StockIndicator& indicator) {
+void prescybase::StockListEntry::addIndicator(const prescyengine::StockIndicator& indicator) {
     auto label = new QLabel("--", this);
     auto toolTip = fmt::format("{}<br/><br/>{}", indicator.name, indicator.expression);
     label->setToolTip(QString::fromStdString(toolTip));

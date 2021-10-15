@@ -11,13 +11,13 @@ class StockChart : public QWidget {
     Q_OBJECT
 public:
     explicit StockChart(QWidget* parent = 0);
-    void setData(const std::vector<prescy::StockData>& data);
+    void setData(const std::vector<prescyengine::StockData>& data);
 
 protected:
     void paintEvent(QPaintEvent* event);
 
 private:
-    std::vector<prescy::StockData> _data;
+    std::vector<prescyengine::StockData> _data;
 };
 
 }

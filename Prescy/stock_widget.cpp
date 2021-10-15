@@ -65,10 +65,10 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
             if (!_symbolEdit.currentText().isEmpty()) {
                 try {
                     auto tickerData = _symbolEdit.currentText().split(")").first().split("(");
-                    auto query = prescy::StockQuery{tickerData[0].toStdString(), intervalEdit->currentText().toStdString()};
+                    auto query = prescyengine::StockQuery{tickerData[0].toStdString(), intervalEdit->currentText().toStdString()};
                     addStock(query);
                     _registry.addStockQuery(query);
-                } catch (prescy::PrescyException& e) {
+                } catch (prescyengine::PrescyException& e) {
                     QMessageBox::warning(this, "Error updating registry: ", e.what());
                 }
             }
@@ -96,10 +96,10 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
         if (_stocks.currentItem()) {
             try {
                 auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.currentItem()));
-                auto query = prescy::StockQuery(entry->symbol(), entry->range());
+                auto query = prescyengine::StockQuery(entry->symbol(), entry->range());
                 _dataSource.removeQuery(query);
                 _registry.removeStockQuery(query);
-            } catch (prescy::PrescyException& e) {
+            } catch (prescyengine::PrescyException& e) {
                 qDebug("%s\n", e.what());
             }
 
@@ -119,11 +119,11 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
         connect(buttonBox, &QDialogButtonBox::accepted, addIndicatorDialog, [this, nameEdit, expressionEdit, addIndicatorDialog]() {
             if (!nameEdit->text().isEmpty() && !expressionEdit->toPlainText().isEmpty()) {
                 try {
-                    auto indicator = prescy::StockIndicator(nameEdit->text().toStdString(),
+                    auto indicator = prescyengine::StockIndicator(nameEdit->text().toStdString(),
                                                             expressionEdit->toPlainText().toStdString());
                     addIndicator(indicator);
                     _registry.addStockIndicator(indicator);
-                } catch (prescy::PrescyException& e) {
+                } catch (prescyengine::PrescyException& e) {
                     QMessageBox::warning(this, "Error updating registry: ", e.what());
                 }
             }
@@ -158,7 +158,7 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
             for (const auto& indicator : indicators) {
                 nameEdit->addItem(QString::fromStdString(indicator.name));
             }
-        } catch (prescy::PrescyException& e) {
+        } catch (prescyengine::PrescyException& e) {
             QMessageBox::warning(this, "Error fetching indicators: ", e.what());
         }
 
@@ -172,7 +172,7 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
                         entry->removeIndicator(name);
                     }
                     _registry.removeStockIndicator(name);
-                } catch (prescy::PrescyException& e) {
+                } catch (prescyengine::PrescyException& e) {
                     QMessageBox::warning(this, "Error updating registry: ", e.what());
                 }
             }
@@ -201,7 +201,7 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
             _lastRefreshed++;
             try {
                 _dataSource.performQueries();
-            } catch (prescy::PrescyException& e) {
+            } catch (prescyengine::PrescyException& e) {
                 qDebug("%s\n", e.what());
             }
         } else if (_lastRefreshed == 10) {
@@ -237,18 +237,18 @@ void prescybase::StockWidget::refreshStocks() {
     try {
         for (auto i = 0; i < _stocks.count(); ++i) {
             auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.item(i)));
-            auto data = _dataSource.data(prescy::StockQuery{entry->symbol(), entry->range()});
+            auto data = _dataSource.data(prescyengine::StockQuery{entry->symbol(), entry->range()});
             entry->setData(data);
             entry->repaint();
         }
-    } catch (prescy::PrescyException& e) {
+    } catch (prescyengine::PrescyException& e) {
         _lastRefreshedLabel.setText("Unable to refresh.");
         qDebug("%s\n", e.what());
         _timer.stop();
     }
 }
 
-void prescybase::StockWidget::addStock(const prescy::StockQuery& query) {
+void prescybase::StockWidget::addStock(const prescyengine::StockQuery& query) {
     _dataSource.addQuery(query);
     _dataSource.performQueries();
 
@@ -264,7 +264,7 @@ void prescybase::StockWidget::addStock(const prescy::StockQuery& query) {
     refreshStocks();
 }
 
-void prescybase::StockWidget::addIndicator(const prescy::StockIndicator& indicator) {
+void prescybase::StockWidget::addIndicator(const prescyengine::StockIndicator& indicator) {
     for (auto i = 0; i < _stocks.count(); ++i) {
         auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.item(i)));
         entry->addIndicator(indicator);

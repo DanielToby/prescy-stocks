@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-namespace prescy {
+namespace prescyengine {
 
 class Log {
 public:
@@ -30,12 +30,12 @@ private:
 
 }
 
-#define E_TRACE(...) ::prescy::Log::getLogger()->trace(__VA_ARGS__)
-#define E_DEBUG(...) ::prescy::Log::getLogger()->debug(__VA_ARGS__)
-#define E_INFO(...) ::prescy::Log::getLogger()->info(__VA_ARGS__)
-#define E_WARN(...) ::prescy::Log::getLogger()->warn(__VA_ARGS__)
-#define E_ERROR(...) ::prescy::Log::getLogger()->error(__VA_ARGS__)
-#define E_CRITICAL(...) ::prescy::Log::getLogger()->critical(__VA_ARGS__)
+#define E_TRACE(...) ::prescyengine::Log::getLogger()->trace(__VA_ARGS__)
+#define E_DEBUG(...) ::prescyengine::Log::getLogger()->debug(__VA_ARGS__)
+#define E_INFO(...) ::prescyengine::Log::getLogger()->info(__VA_ARGS__)
+#define E_WARN(...) ::prescyengine::Log::getLogger()->warn(__VA_ARGS__)
+#define E_ERROR(...) ::prescyengine::Log::getLogger()->error(__VA_ARGS__)
+#define E_CRITICAL(...) ::prescyengine::Log::getLogger()->critical(__VA_ARGS__)
 
 #ifdef _WIN32
 #define API_CALL() E_TRACE("Called " __FUNCTION__ "() : " __FILE__ ":{}", __LINE__)

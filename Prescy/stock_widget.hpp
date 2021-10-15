@@ -24,11 +24,11 @@ public:
 
 private:
     void refreshStocks();
-    void addStock(const prescy::StockQuery& query);
-    void addIndicator(const prescy::StockIndicator& indicator);
+    void addStock(const prescyengine::StockQuery& query);
+    void addIndicator(const prescyengine::StockIndicator& indicator);
 
-    prescy::Registry _registry;
-    prescy::StockDataSource _dataSource;
+    prescyengine::Registry _registry;
+    prescyengine::StockDataSource _dataSource;
     QListWidget _stocks;
     QTimer _timer;
     int _lastRefreshed;

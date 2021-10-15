@@ -2,7 +2,7 @@
 
 #include <src/log.hpp>
 
-namespace prescy {
+namespace prescyengine {
 
 PrescyException::PrescyException(const std::string& msg) :
     std::runtime_error(msg) {

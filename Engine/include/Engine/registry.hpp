@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace prescy {
+namespace prescyengine {
 
 class Prescy_Engine Registry {
 public:

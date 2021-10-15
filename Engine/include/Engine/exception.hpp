@@ -7,7 +7,7 @@
 //#pragma warning(push)
 //#pragma warning(disable : 4275)
 
-namespace prescy {
+namespace prescyengine {
 struct Prescy_Engine PrescyException : public std::runtime_error {
     explicit PrescyException(const std::string& msg);
 };

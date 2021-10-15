@@ -11,7 +11,7 @@
 #include <thread>
 #include <unordered_map>
 
-namespace prescy::internal {
+namespace prescyengine::internal {
 std::size_t callBack(
     const char* in,
     std::size_t size,
@@ -23,7 +23,7 @@ std::size_t callBack(
 }
 }
 
-namespace prescy {
+namespace prescyengine {
 class StockDataSource::impl {
 public:
     impl() :
@@ -152,7 +152,7 @@ public:
                     curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
                     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
                     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-                    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, prescy::internal::callBack);
+                    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, prescyengine::internal::callBack);
                     curl_easy_setopt(curl, CURLOPT_WRITEDATA, data.get());
                     curl_easy_perform(curl);
                     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);

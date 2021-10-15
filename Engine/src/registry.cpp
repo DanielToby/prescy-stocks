@@ -9,7 +9,7 @@
 
 #include <fstream>
 
-namespace prescy {
+namespace prescyengine {
 class Registry::impl {
 public:
     impl(const std::string& path) :

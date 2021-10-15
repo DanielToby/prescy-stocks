@@ -12,7 +12,7 @@ BOOL APIENTRY DllMain([[maybe_unused]] HMODULE hModule,
                       DWORD reason,
                       [[maybe_unused]] LPVOID reserved) {
     if (reason == DLL_PROCESS_ATTACH) {
-        prescy::Log::init();
+        prescyengine::Log::init();
     }
     return TRUE;
 }
@@ -23,7 +23,7 @@ BOOL APIENTRY DllMain([[maybe_unused]] HMODULE hModule,
 
 static void con() __attribute__((constructor));
 void con() {
-    prescy::Log::init();
+    prescyengine::Log::init();
 }
 
 #endif

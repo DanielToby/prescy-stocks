@@ -2,7 +2,7 @@
 
 #include <functional>
 
-namespace prescy {
+namespace prescyengine {
 
 StockQuery::StockQuery() :
     symbol{""},

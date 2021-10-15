@@ -1,6 +1,6 @@
 #include <Engine/stock_indicator.hpp>
 
-namespace prescy {
+namespace prescyengine {
 
 StockIndicator::StockIndicator() :
     name{""},

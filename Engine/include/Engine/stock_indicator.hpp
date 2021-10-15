@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace prescy {
+namespace prescyengine {
 
 struct Prescy_Engine StockIndicator {
     StockIndicator();

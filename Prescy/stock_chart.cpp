@@ -11,7 +11,7 @@ StockChart::StockChart(QWidget* parent) :
     _data{} {
 }
 
-void StockChart::setData(const std::vector<prescy::StockData>& data) {
+void StockChart::setData(const std::vector<prescyengine::StockData>& data) {
     _data = data;
 }
 

@@ -22,10 +22,10 @@ public:
     StockListEntry(const std::string& symbol,
                    const std::string& name,
                    const std::string& range,
-                   const std::vector<prescy::StockIndicator> indicators = {},
+                   const std::vector<prescyengine::StockIndicator> indicators = {},
                    QWidget* parent = 0);
-    void setData(const std::vector<prescy::StockData>& data);
-    void addIndicator(const prescy::StockIndicator& indicator);
+    void setData(const std::vector<prescyengine::StockData>& data);
+    void addIndicator(const prescyengine::StockIndicator& indicator);
     void removeIndicator(const std::string& name);
 
     std::string symbol();
@@ -34,7 +34,7 @@ public:
 private:
     std::string _symbol;
     std::string _range;
-    std::unordered_map<prescy::StockIndicator, QLabel*, prescy::StockIndicatorHashFunction> _indicators;
+    std::unordered_map<prescyengine::StockIndicator, QLabel*, prescyengine::StockIndicatorHashFunction> _indicators;
 
     StockChart _chart;
 };

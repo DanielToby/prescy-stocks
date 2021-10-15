@@ -4,7 +4,7 @@
 
 #include <lua/lua.hpp>
 
-namespace prescy {
+namespace prescyengine {
 
 static double lua_result = 0;
 static int lua_evaluate(lua_State* L) {
@@ -12,7 +12,7 @@ static int lua_evaluate(lua_State* L) {
     return 0;
 }
 
-double evaluateExpression(const std::vector<StockData>& data, const std::string& expression) {
+double Prescy_Engine evaluateExpression(const std::vector<StockData>& data, const std::string& expression) {
     auto luaState_deleter = [](lua_State* L) {
         lua_close(L);
     };
@@ -20,25 +20,29 @@ double evaluateExpression(const std::vector<StockData>& data, const std::string&
     lua_State* L = luaState.get();
     luaL_openlibs(L);
     lua_pushcfunction(L, lua_evaluate);
-    lua_setglobal(L, "result");
+    lua_setglobal(L, "setResult");
 
     lua_settop(L, 0);
-    lua_createtable(L, 0, 1 + static_cast<int>(data.size()));
-    for (const auto& timePoint : data) {
-        lua_pushinteger(L, timePoint.timeStamp);
+    lua_createtable(L, 0, static_cast<int>(data.size()));
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        lua_createtable(L, 0, 6);
+        lua_pushinteger(L, data[i].timeStamp);
         lua_setfield(L, -2, "timeStamp");
-        lua_pushnumber(L, timePoint.open);
+        lua_pushnumber(L, data[i].open);
         lua_setfield(L, -2, "open");
-        lua_pushnumber(L, timePoint.close);
+        lua_pushnumber(L, data[i].close);
         lua_setfield(L, -2, "close");
-        lua_pushnumber(L, timePoint.high);
+        lua_pushnumber(L, data[i].high);
         lua_setfield(L, -2, "high");
-        lua_pushnumber(L, timePoint.low);
+        lua_pushnumber(L, data[i].low);
         lua_setfield(L, -2, "low");
-        lua_pushnumber(L, timePoint.volume);
+        lua_pushnumber(L, data[i].volume);
         lua_setfield(L, -2, "volume");
+        lua_rawseti(L, -2, static_cast<int>(i));
     }
-    lua_setglobal(L, expression.c_str());
+    lua_pushinteger(L, static_cast<int>(data.size()));
+    lua_setglobal(L, "__size");
+    lua_setglobal(L, "data");
 
     lua_result = 0;
     if (luaL_dostring(L, expression.c_str()) != 0) {

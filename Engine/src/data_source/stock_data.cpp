@@ -1,6 +1,6 @@
 #include <Engine/data_source/stock_data.hpp>
 
-namespace prescy {
+namespace prescyengine {
 
 StockData::StockData() :
     timeStamp{-1},
