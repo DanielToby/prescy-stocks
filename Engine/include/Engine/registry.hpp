@@ -21,9 +21,9 @@ public:
     void removeStockQuery(const StockQuery& query);
     std::vector<StockQuery> stockQueries();
 
-    void addStockIndicator(const StockIndicator& indicator);
-    void removeStockIndicator(const std::string& name);
-    std::vector<StockIndicator> stockIndicators();
+    void addOrUpdateIndicator(const StockIndicator& indicator);
+    void removeIndicator(const std::string& name);
+    std::vector<StockIndicator> indicators();
 
 private:
     class impl;

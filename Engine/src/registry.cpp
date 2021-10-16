@@ -127,12 +127,21 @@ public:
         return _stockQueries;
     }
 
-    void addStockIndicator(const StockIndicator& indicator) {
-        _stockIndicators.emplace_back(indicator);
-        writeRegistry();
+    void addOrUpdateIndicator(const StockIndicator& indicator) {
+        bool found = false;
+        for (auto& storedIndicator : _stockIndicators) {
+            if (storedIndicator.name == indicator.name) {
+                storedIndicator.expression = indicator.expression;
+                found = true;
+            }
+        }
+        if (!found) {
+            _stockIndicators.emplace_back(indicator);
+            writeRegistry();
+        }
     }
 
-    void removeStockIndicator(const std::string& name) {
+    void removeIndicator(const std::string& name) {
         auto priorSize = _stockIndicators.size();
         _stockIndicators.erase(
             std::remove_if(_stockIndicators.begin(),
@@ -146,7 +155,7 @@ public:
         }
     }
 
-    std::vector<StockIndicator> stockIndicators() {
+    std::vector<StockIndicator> indicators() {
         return _stockIndicators;
     }
 
@@ -176,19 +185,19 @@ std::vector<StockQuery> Registry::stockQueries() {
     return _impl->stockQueries();
 }
 
-void Registry::addStockIndicator(const StockIndicator& indicator) {
+void Registry::addOrUpdateIndicator(const StockIndicator& indicator) {
     API_CALL();
-    _impl->addStockIndicator(indicator);
+    _impl->addOrUpdateIndicator(indicator);
 }
 
-void Registry::removeStockIndicator(const std::string& name) {
+void Registry::removeIndicator(const std::string& name) {
     API_CALL();
-    _impl->removeStockIndicator(name);
+    _impl->removeIndicator(name);
 }
 
-std::vector<StockIndicator> Registry::stockIndicators() {
+std::vector<StockIndicator> Registry::indicators() {
     API_CALL();
-    return _impl->stockIndicators();
+    return _impl->indicators();
 }
 
 }

@@ -25,7 +25,7 @@ public:
                    const std::vector<prescyengine::StockIndicator> indicators = {},
                    QWidget* parent = 0);
     void setData(const std::vector<prescyengine::StockData>& data);
-    void addIndicator(const prescyengine::StockIndicator& indicator);
+    void addOrUpdateIndicator(const prescyengine::StockIndicator& indicator);
     void removeIndicator(const std::string& name);
 
     std::string symbol();

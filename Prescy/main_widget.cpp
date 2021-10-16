@@ -1,4 +1,5 @@
-#include "stock_widget.hpp"
+#include "main_widget.hpp"
+#include "indicators_widget.hpp"
 
 #include <QComboBox>
 #include <QDialog>
@@ -10,7 +11,6 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QStandardPaths>
-#include <QToolBar>
 
 #include <QDebug>
 #include <QDir>
@@ -19,7 +19,7 @@
 #include <Engine/data_source/stock_query.hpp>
 #include <Engine/exception.hpp>
 
-prescybase::StockWidget::StockWidget(QWidget* parent) :
+prescybase::MainWidget::MainWidget(QWidget* parent) :
     QWidget{parent},
     _registry{QStandardPaths::writableLocation(QStandardPaths::HomeLocation).toStdString() + "/.prescy/registry.json"},
     _dataSource{},
@@ -45,10 +45,10 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
     _symbolEdit.setVisible(false);
     _symbolEdit.setMaximumWidth(300);
 
-    QAction* addStockAction = new QAction("Add Stock", this);
-    addStockAction->setShortcuts(QKeySequence::New);
-    addStockAction->setStatusTip("Add a new stock");
-    connect(addStockAction, &QAction::triggered, this, [this]() {
+    auto addStockButton = new QPushButton("Add Stock", this);
+    addStockButton->setMaximumWidth(140);
+    addStockButton->setStatusTip("Add a new stock");
+    connect(addStockButton, &QPushButton::clicked, this, [this]() {
         auto addStockDialog = new QDialog(this);
         addStockDialog->setWindowTitle("Add Stock");
 
@@ -89,10 +89,10 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
         addStockDialog->show();
     });
 
-    QAction* removeStockAction = new QAction("Remove Stock", this);
-    removeStockAction->setShortcuts(QKeySequence::Delete);
-    removeStockAction->setStatusTip("Remove the selected stock");
-    connect(removeStockAction, &QAction::triggered, this, [this]() {
+    auto removeStockButton = new QPushButton("Remove Stock", this);
+    removeStockButton->setMaximumWidth(140);
+    removeStockButton->setStatusTip("Remove the selected stock");
+    connect(removeStockButton, &QPushButton::clicked, this, [this]() {
         if (_stocks.currentItem()) {
             try {
                 auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.currentItem()));
@@ -107,93 +107,43 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
         }
     });
 
-    QAction* addIndicatorAction = new QAction("Add Indicator", this);
-    addIndicatorAction->setStatusTip("Add a new indicator");
-    connect(addIndicatorAction, &QAction::triggered, this, [this]() {
-        auto addIndicatorDialog = new QDialog(this);
-        addIndicatorDialog->setWindowTitle("Add Indicator");
-        auto nameEdit = new QLineEdit(this);
-        auto expressionEdit = new QPlainTextEdit(this);
+    _stocks.setFocusPolicy(Qt::NoFocus);
 
-        auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, addIndicatorDialog);
-        connect(buttonBox, &QDialogButtonBox::accepted, addIndicatorDialog, [this, nameEdit, expressionEdit, addIndicatorDialog]() {
-            if (!nameEdit->text().isEmpty() && !expressionEdit->toPlainText().isEmpty()) {
-                try {
-                    auto indicator = prescyengine::StockIndicator(nameEdit->text().toStdString(),
-                                                            expressionEdit->toPlainText().toStdString());
-                    addIndicator(indicator);
-                    _registry.addStockIndicator(indicator);
-                } catch (prescyengine::PrescyException& e) {
-                    QMessageBox::warning(this, "Error updating registry: ", e.what());
-                }
-            }
-            addIndicatorDialog->close();
-        });
-
-        auto addIndicatorDialogLayout = new QVBoxLayout(addIndicatorDialog);
-        addIndicatorDialogLayout->addWidget(new QLabel("Name"));
-        addIndicatorDialogLayout->addWidget(nameEdit);
-        addIndicatorDialogLayout->addWidget(new QLabel("Expression"));
-        auto luaLabel = new QLabel("<a href=\"https://www.lua.org/manual/5.4/\">Lua 5.4 Manual</a>");
-        luaLabel->setTextFormat(Qt::RichText);
-        luaLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
-        luaLabel->setOpenExternalLinks(true);
-        addIndicatorDialogLayout->addWidget(luaLabel);
-        addIndicatorDialogLayout->addWidget(expressionEdit);
-        addIndicatorDialogLayout->addWidget(buttonBox);
-        addIndicatorDialog->setLayout(addIndicatorDialogLayout);
-
-        addIndicatorDialog->setMinimumSize(400, 200);
-        addIndicatorDialog->show();
-    });
-
-    QAction* removeIndicatorAction = new QAction("Remove Indicator", this);
-    removeIndicatorAction->setStatusTip("Remove the selected indicator");
-    connect(removeIndicatorAction, &QAction::triggered, this, [this]() {
-        auto removeIndicatorDialog = new QDialog(this);
-        removeIndicatorDialog->setWindowTitle("Remove Indicator");
-        auto nameEdit = new QComboBox(this);
-        try {
-            auto indicators = _registry.stockIndicators();
-            for (const auto& indicator : indicators) {
-                nameEdit->addItem(QString::fromStdString(indicator.name));
-            }
-        } catch (prescyengine::PrescyException& e) {
-            QMessageBox::warning(this, "Error fetching indicators: ", e.what());
+    auto indicators = std::vector<prescyengine::StockIndicator>{};
+    try {
+        indicators = _registry.indicators();
+    } catch (prescyengine::PrescyException& e) {
+        QMessageBox::warning(this, "Error fetching indicators: ", e.what());
+    }
+    auto indicatorsWidget = new prescybase::IndicatorsWidget(indicators, this);
+    connect(indicatorsWidget,
+            &IndicatorsWidget::indicatorAddedOrUpdated,
+            this,
+            [this](const prescyengine::StockIndicator& indicator) {
+        for (auto i = 0; i < _stocks.count(); ++i) {
+            auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.item(i)));
+            entry->addOrUpdateIndicator(indicator);
         }
-
-        auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, removeIndicatorDialog);
-        connect(buttonBox, &QDialogButtonBox::accepted, removeIndicatorDialog, [this, nameEdit, removeIndicatorDialog]() {
-            if (!nameEdit->currentText().isEmpty()) {
-                try {
-                    auto name = nameEdit->currentText().toStdString();
-                    for (auto i = 0; i < _stocks.count(); ++i) {
-                        auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.item(i)));
-                        entry->removeIndicator(name);
-                    }
-                    _registry.removeStockIndicator(name);
-                } catch (prescyengine::PrescyException& e) {
-                    QMessageBox::warning(this, "Error updating registry: ", e.what());
-                }
-            }
-            removeIndicatorDialog->close();
-        });
-
-        auto removeStockIndicatorLayout = new QVBoxLayout(removeIndicatorDialog);
-        removeStockIndicatorLayout->addWidget(new QLabel("Name"));
-        removeStockIndicatorLayout->addWidget(nameEdit);
-        removeStockIndicatorLayout->addWidget(buttonBox);
-        removeIndicatorDialog->setLayout(removeStockIndicatorLayout);
-
-        removeIndicatorDialog->setMinimumSize(400, 200);
-        removeIndicatorDialog->show();
+        try {
+            _registry.addOrUpdateIndicator(indicator);
+        } catch (prescyengine::PrescyException& e) {
+            QMessageBox::warning(this, "Error updating registry: ", e.what());
+        }
     });
-
-    auto toolBar = new QToolBar(this);
-    toolBar->addAction(addStockAction);
-    toolBar->addAction(removeStockAction);
-    toolBar->addAction(addIndicatorAction);
-    toolBar->addAction(removeIndicatorAction);
+    connect(indicatorsWidget,
+            &IndicatorsWidget::indicatorRemoved,
+            this,
+            [this](const std::string& name) {
+        for (auto i = 0; i < _stocks.count(); ++i) {
+            auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.item(i)));
+            entry->removeIndicator(name);
+        }
+        try {
+            _registry.removeIndicator(name);
+        } catch (prescyengine::PrescyException& e) {
+            QMessageBox::warning(this, "Error updating registry: ", e.what());
+        }
+    });
 
     connect(&_timer, &QTimer::timeout, this, [this]() {
         if (_lastRefreshed == 5) {
@@ -204,7 +154,6 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
             } catch (prescyengine::PrescyException& e) {
                 qDebug("%s\n", e.what());
             }
-        } else if (_lastRefreshed == 10) {
             refreshStocks();
         } else {
             _lastRefreshed++;
@@ -212,15 +161,17 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
         }
     });
 
-    _stocks.setFocusPolicy(Qt::NoFocus);
 
     auto layout = new QGridLayout{this};
-    layout->addWidget(toolBar, 0, 0, 1, 1);
-    layout->addWidget(&_lastRefreshedLabel, 0, 1, 1, 1);
+    layout->addWidget(addStockButton, 0, 0, 1, 1);
+    layout->addWidget(removeStockButton, 0, 1, 1, 1);
+    layout->addWidget(&_lastRefreshedLabel, 0, 2, 1, 1);
     layout->setAlignment(&_lastRefreshedLabel, Qt::AlignRight);
-    layout->addWidget(&_stocks, 1, 0, 1, 2);
+    layout->addWidget(&_stocks, 1, 0, 1, 3);
+    layout->addWidget(indicatorsWidget, 2, 0, 1, 3);
 
-    for (const auto& indicator : _registry.stockIndicators()) {
+
+    for (const auto& indicator : _registry.indicators()) {
         addIndicator(indicator);
     }
 
@@ -231,7 +182,7 @@ prescybase::StockWidget::StockWidget(QWidget* parent) :
     _timer.start(1000);
 }
 
-void prescybase::StockWidget::refreshStocks() {
+void prescybase::MainWidget::refreshStocks() {
     _lastRefreshed = 0;
     _lastRefreshedLabel.setText("Refreshing...");
     try {
@@ -248,14 +199,14 @@ void prescybase::StockWidget::refreshStocks() {
     }
 }
 
-void prescybase::StockWidget::addStock(const prescyengine::StockQuery& query) {
+void prescybase::MainWidget::addStock(const prescyengine::StockQuery& query) {
     _dataSource.addQuery(query);
     _dataSource.performQueries();
 
     auto stockListEntry = new StockListEntry(query.symbol,
                                              _companyNames[query.symbol],
                                              query.range,
-                                             _registry.stockIndicators(),
+                                             _registry.indicators(),
                                              this);
     auto item = new QListWidgetItem(&_stocks);
     _stocks.insertItem(_stocks.count(), item);
@@ -264,9 +215,9 @@ void prescybase::StockWidget::addStock(const prescyengine::StockQuery& query) {
     refreshStocks();
 }
 
-void prescybase::StockWidget::addIndicator(const prescyengine::StockIndicator& indicator) {
+void prescybase::MainWidget::addIndicator(const prescyengine::StockIndicator& indicator) {
     for (auto i = 0; i < _stocks.count(); ++i) {
         auto entry = qobject_cast<prescybase::StockListEntry*>(_stocks.itemWidget(_stocks.item(i)));
-        entry->addIndicator(indicator);
+        entry->addOrUpdateIndicator(indicator);
     }
 }

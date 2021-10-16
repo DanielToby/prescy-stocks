@@ -8,7 +8,6 @@
 
 #include <QLabel>
 #include <QWidget>
-
 #include <QComboBox>
 #include <QListWidget>
 #include <QTimer>
@@ -18,9 +17,10 @@
 
 namespace prescybase {
 
-class StockWidget : public QWidget {
+class MainWidget : public QWidget {
+Q_OBJECT
 public:
-    StockWidget(QWidget* parent = 0);
+    MainWidget(QWidget* parent = 0);
 
 private:
     void refreshStocks();

@@ -38,7 +38,7 @@ prescybase::StockListEntry::StockListEntry(const std::string& symbol,
     layout->addWidget(&_chart);
 
     for (const auto& indicator : indicators) {
-        addIndicator(indicator);
+        addOrUpdateIndicator(indicator);
     }
 
     setLayout(layout);
@@ -60,7 +60,7 @@ void prescybase::StockListEntry::setData(const std::vector<prescyengine::StockDa
     }
 }
 
-void prescybase::StockListEntry::addIndicator(const prescyengine::StockIndicator& indicator) {
+void prescybase::StockListEntry::addOrUpdateIndicator(const prescyengine::StockIndicator& indicator) {
     auto label = new QLabel("--", this);
     auto toolTip = fmt::format("{}<br/><br/>{}", indicator.name, indicator.expression);
     label->setToolTip(QString::fromStdString(toolTip));
@@ -73,7 +73,7 @@ void prescybase::StockListEntry::addIndicator(const prescyengine::StockIndicator
 void prescybase::StockListEntry::removeIndicator(const std::string& name) {
     for (auto iterator = _indicators.begin(); iterator != _indicators.end(); ++iterator) {
         if (iterator->first.name == name) {
-            this->layout()->removeWidget(iterator->second);
+            iterator->second->setVisible(false);
             _indicators.erase(iterator);
         }
     }
