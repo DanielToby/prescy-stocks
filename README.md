@@ -1,7 +1,7 @@
 ## **A cross-platform live stock monitor with customizable, evaluated indicators**
 ![Demo](demo.gif)
 
-### **Multithreaded live stock querying**
+### **Multithreaded curl stock querying**
 Stock data is pulled every ten seconds from the [Yahoo Finance API](https://finance.yahoo.com/quotes/API,Documentation/view/v1/). The work is distributed across eight threads.
 
 ### **Indicators using Lua expression evaluation**
