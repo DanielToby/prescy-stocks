@@ -9,7 +9,7 @@ Stock data is pulled every ten seconds from the [Yahoo Finance API](https://fina
 
 #### Percent Changed
 ```lua
-setResult( (data[__size - 1].close - data[0].open) / data[__size - 1].close * 100 )`
+setResult( (data[__size - 1].close - data[0].open) / data[__size - 1].close * 100 )
 ```
  #### Modified Moving Average
  ```lua
