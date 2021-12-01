@@ -121,7 +121,7 @@ public:
 
     void performQueries() {
         if (_data.size() > 0) {
-            auto numThreads = 8;
+            auto numThreads = 6;
             auto numQueries = static_cast<int>(_data.size());
             std::vector<std::vector<StockQuery>> threadQueries(numThreads);
             auto i = 0;

@@ -21,7 +21,8 @@ public:
     void removeStockQuery(const StockQuery& query);
     std::vector<StockQuery> stockQueries();
 
-    void addOrUpdateIndicator(const StockIndicator& indicator);
+    void addIndicator(const StockIndicator& indicator);
+    void updateIndicator(const StockIndicator& indicator);
     void removeIndicator(const std::string& name);
     std::vector<StockIndicator> indicators();
 

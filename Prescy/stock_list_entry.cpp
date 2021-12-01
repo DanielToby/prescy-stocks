@@ -1,6 +1,6 @@
 #include "stock_list_entry.hpp"
+#include "indicator_thumbnail.hpp"
 
-#include <Engine/evaluator.hpp>
 #include <Engine/exception.hpp>
 #include <fmt/format.h>
 
@@ -9,11 +9,12 @@
 #include <QString>
 #include <QVBoxLayout>
 
-prescybase::StockListEntry::StockListEntry(const std::string& symbol,
-                                           const std::string& name,
-                                           const std::string& range,
-                                           const std::vector<prescyengine::StockIndicator> indicators,
-                                           QWidget* parent) :
+namespace prescybase {
+
+StockListEntry::StockListEntry(const std::string& symbol,
+                               const std::string& name,
+                               const std::string& range,
+                               QWidget* parent) :
     QWidget{parent},
     _symbol{symbol},
     _range{range},
@@ -22,11 +23,10 @@ prescybase::StockListEntry::StockListEntry(const std::string& symbol,
     rangeLabel->setMaximumWidth(50);
     rangeLabel->setAlignment(Qt::AlignCenter);
 
-    auto symbolLabel = new QLabel(QString::fromStdString(symbol).toUpper(), this);
+    auto symbolLabel = new QLabel(QString::fromStdString(symbol), this);
     auto nameLabel = new QLabel(QString::fromStdString(name), this);
-
     auto symbolAndName = new QWidget(this);
-    symbolAndName->setMaximumWidth(200);
+    symbolAndName->setMaximumWidth(nameLabel->width());
     auto symbolAndNameLayout = new QVBoxLayout(this);
     symbolAndNameLayout->addWidget(symbolLabel);
     symbolAndNameLayout->addWidget(nameLabel);
@@ -37,52 +37,19 @@ prescybase::StockListEntry::StockListEntry(const std::string& symbol,
     layout->addWidget(rangeLabel);
     layout->addWidget(&_chart);
 
-    for (const auto& indicator : indicators) {
-        addOrUpdateIndicator(indicator);
-    }
-
     setLayout(layout);
+    setMinimumHeight(80);
 }
 
-void prescybase::StockListEntry::setData(const std::vector<prescyengine::StockData>& data) {
+void StockListEntry::setData(const std::vector<prescyengine::StockData>& data) {
     _chart.setData(data);
-    if (data.size() > 1) {
-        for (const auto& [indicator, label] : _indicators) {
-            try {
-                auto result = prescyengine::evaluateExpression(data, indicator.expression);
-                result < 0 ? label->setStyleSheet("color: red") : label->setStyleSheet("color: lightGreen");
-                label->setText(result > 0 ? "+" + QString::number(result, 'g', 5) + "%" : QString::number(result) + "%");
-            } catch (prescyengine::PrescyException& e) {
-                label->setText("--");
-                qDebug("%s\n", e.what());
-            }
-        }
-    }
 }
 
-void prescybase::StockListEntry::addOrUpdateIndicator(const prescyengine::StockIndicator& indicator) {
-    auto label = new QLabel("--", this);
-    auto toolTip = fmt::format("{}<br/><br/>{}", indicator.name, indicator.expression);
-    label->setToolTip(QString::fromStdString(toolTip));
-    label->setMaximumWidth(100);
-    label->setAlignment(Qt::AlignCenter);
-    this->layout()->addWidget(label);
-    _indicators[indicator] = label;
-}
-
-void prescybase::StockListEntry::removeIndicator(const std::string& name) {
-    for (auto iterator = _indicators.begin(); iterator != _indicators.end(); ++iterator) {
-        if (iterator->first.name == name) {
-            iterator->second->setVisible(false);
-            _indicators.erase(iterator);
-        }
-    }
-}
-
-std::string prescybase::StockListEntry::symbol() {
+std::string StockListEntry::symbol() {
     return _symbol;
 }
 
-std::string prescybase::StockListEntry::range() {
+std::string StockListEntry::range() {
     return _range;
+}
 }

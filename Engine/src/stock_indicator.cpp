@@ -4,20 +4,20 @@ namespace prescyengine {
 
 StockIndicator::StockIndicator() :
     name{""},
-    expression{""} {}
+    expression{""},
+    threshold{0} {}
 
 StockIndicator::StockIndicator(const std::string& name, const std::string& expression) :
     name{name},
-    expression{expression} {}
+    expression{expression},
+    threshold{0} {}
 
 bool StockIndicator::operator==(const StockIndicator& other) const {
-    return name == other.name && expression == other.expression;
+    return name == other.name;
 }
 
 size_t StockIndicatorHashFunction::operator()(const StockIndicator& indicator) const {
-    std::size_t h1 = std::hash<std::string>()(indicator.name);
-    std::size_t h2 = std::hash<std::string>()(indicator.expression);
-    return h1 ^ h2;
+    return std::hash<std::string>()(indicator.name);
 }
 
 }

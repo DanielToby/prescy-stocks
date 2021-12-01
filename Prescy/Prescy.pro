@@ -13,7 +13,7 @@ DEPENDPATH += \
     $$PWD/../vendor/fmt-8.0.1/include
 
 SOURCES += \
-    indicators_widget.cpp \
+    indicator_thumbnail.cpp \
     main.cpp \
     main_widget.cpp \
     main_window.cpp \
@@ -21,7 +21,7 @@ SOURCES += \
     stock_list_entry.cpp
 
 HEADERS += \
-    indicators_widget.hpp \
+    indicator_thumbnail.hpp \
     main_widget.hpp \
     main_window.hpp \
     stock_chart.hpp \

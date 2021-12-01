@@ -9,6 +9,7 @@ namespace prescybase {
 StockChart::StockChart(QWidget* parent) :
     QWidget{parent},
     _data{} {
+    setMinimumWidth(200);
 }
 
 void StockChart::setData(const std::vector<prescyengine::StockData>& data) {

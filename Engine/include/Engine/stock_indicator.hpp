@@ -11,6 +11,7 @@ struct Prescy_Engine StockIndicator {
     bool operator==(const StockIndicator& other) const;
     std::string name;
     std::string expression;
+    double threshold;
 };
 
 struct Prescy_Engine StockIndicatorHashFunction {
