@@ -4,12 +4,12 @@
 
 namespace prescybase {
 
-IndicatorThumbnail::IndicatorThumbnail(const std::string& name, double midPoint, QWidget* parent) :
+IndicatorThumbnail::IndicatorThumbnail(const std::string& name, const std::string& expression, double midPoint, QWidget* parent) :
     QWidget(parent),
     _button{"--", this},
     _name(name),
-    _threshold(midPoint)
-{
+    _expression(expression),
+    _threshold(midPoint) {
     auto palette = _button.palette();
     palette.setColor(QPalette::Button, QColor(Qt::lightGray));
     _button.setAutoFillBackground(true);
@@ -25,28 +25,21 @@ IndicatorThumbnail::IndicatorThumbnail(const std::string& name, double midPoint,
     setMinimumWidth(140);
 }
 
-void IndicatorThumbnail::setName(const std::string &name) {
-    _name = name;
-}
-
-void IndicatorThumbnail::setThreshold(double threshold) {
-    _threshold = threshold;
-}
-
-void IndicatorThumbnail::setValue(double value)
-{
+void IndicatorThumbnail::setValue(double value) {
+    _button.setText(QString::number(value));
     auto palette = _button.palette();
     if (value < _threshold) {
         palette.setColor(QPalette::Button, QColor(Qt::red));
-        _button.setText("-" + QString::number(value) + "%");
     } else {
         palette.setColor(QPalette::Button, QColor(Qt::darkGreen));
-        _button.setText("+" + QString::number(value) + "%");
     }
     _button.setAutoFillBackground(true);
     _button.setPalette(palette);
     _button.update();
 }
 
+std::string IndicatorThumbnail::expression() {
+    return _expression;
 }
 
+}

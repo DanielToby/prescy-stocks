@@ -8,10 +8,10 @@
 #include <QWidget>
 
 #include <string>
-class QLabel;
-namespace prescybase {
 
-class IndicatorThumbnail;
+class QLabel;
+
+namespace prescybase {
 
 class StockListEntry : public QWidget {
     Q_OBJECT
@@ -20,6 +20,7 @@ public:
                    const std::string& name,
                    const std::string& range,
                    QWidget* parent = 0);
+
     void setData(const std::vector<prescyengine::StockData>& data);
 
     std::string symbol();

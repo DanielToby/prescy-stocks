@@ -20,10 +20,8 @@ public:
     MainWidget(QWidget* parent = 0);
 
 private:
-    void addStockToTable(const prescyengine::StockQuery& query);
-    void addIndicatorToTable(const prescyengine::StockIndicator& indicator);
-    void updateIndicatorInTable(const prescyengine::StockIndicator& indicator);
-    void refresh();
+    void rebuildTable();
+    void performQueries();
 
     QTableWidget _stocksTable;
     int _elapsedTime;

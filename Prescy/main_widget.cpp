@@ -2,26 +2,26 @@
 #include "indicator_thumbnail.hpp"
 
 #include <QComboBox>
+#include <QDebug>
 #include <QDialog>
 #include <QDialogButtonBox>
-#include <QHeaderView>
-#include <QGridLayout>
-#include <QMessageBox>
-#include <QPushButton>
-#include <QPlainTextEdit>
-#include <QStandardPaths>
-#include <QLabel>
-#include <QDebug>
 #include <QDir>
 #include <QFile>
-#include <QListWidget>
+#include <QGridLayout>
+#include <QHeaderView>
+#include <QLabel>
 #include <QLineEdit>
+#include <QListWidget>
+#include <QMessageBox>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QStandardPaths>
 #include <QTimer>
 
 #include <Engine/data_source/stock_data_source.hpp>
 #include <Engine/data_source/stock_query.hpp>
-#include <Engine/exception.hpp>
 #include <Engine/evaluator.hpp>
+#include <Engine/exception.hpp>
 
 #include <fmt/format.h>
 
@@ -54,7 +54,7 @@ MainWidget::MainWidget(QWidget* parent) :
     auto addStockButton = new QPushButton("Add Stock", this);
     addStockButton->setMaximumWidth(140);
     addStockButton->setStatusTip("Add a new stock");
-    connect(addStockButton, &QPushButton::clicked, this, [symbolEdit, this]() {
+    connect(addStockButton, &QPushButton::clicked, this, [addStockButton, symbolEdit, this]() {
         auto addStockDialog = new QDialog(this);
         addStockDialog->setWindowTitle("Add Stock");
 
@@ -67,21 +67,24 @@ MainWidget::MainWidget(QWidget* parent) :
         intervalEdit->setCurrentIndex(0);
 
         auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, addStockDialog);
-        connect(buttonBox, &QDialogButtonBox::accepted, addStockDialog, [intervalEdit, addStockDialog, symbolEdit, this]() {
+        connect(buttonBox, &QDialogButtonBox::accepted, addStockDialog, [addStockButton, intervalEdit, addStockDialog, symbolEdit, this]() {
             if (!symbolEdit->currentText().isEmpty()) {
                 auto tickerData = symbolEdit->currentText().split(") ").first().split(" (");
                 auto query = prescyengine::StockQuery{tickerData[0].toStdString(), intervalEdit->currentText().toStdString()};
-                addStockToTable(query);
-
                 try {
                     _dataSource.addQuery(query);
                     _registry.addStockQuery(query);
+                    rebuildTable();
                 } catch (prescyengine::PrescyException& e) {
                     QMessageBox::warning(this, "Error updating registry: ", e.what());
                 }
             }
             symbolEdit->setVisible(false);
             addStockDialog->close();
+            addStockButton->setEnabled(true);
+        });
+        connect(buttonBox, &QDialogButtonBox::rejected, addStockDialog, [addStockButton]() {
+            addStockButton->setEnabled(true);
         });
 
         symbolEdit->setVisible(true);
@@ -94,6 +97,7 @@ MainWidget::MainWidget(QWidget* parent) :
         addStockDialogLayout->addWidget(buttonBox);
         addStockDialog->setLayout(addStockDialogLayout);
 
+        addStockButton->setEnabled(false);
         addStockDialog->show();
     });
 
@@ -107,17 +111,17 @@ MainWidget::MainWidget(QWidget* parent) :
             try {
                 _dataSource.removeQuery(query);
                 _registry.removeStockQuery(query);
+                rebuildTable();
             } catch (prescyengine::PrescyException& e) {
                 qDebug("%s\n", e.what());
             }
-            _stocksTable.removeRow(_stocksTable.currentRow());
         }
     });
 
     auto addIndicatorButton = new QPushButton("Add Indicator", this);
     addIndicatorButton->setMaximumWidth(140);
     addIndicatorButton->setStatusTip("Add a new indicator");
-    connect(addIndicatorButton, &QPushButton::clicked, this, [this]() {
+    connect(addIndicatorButton, &QPushButton::clicked, this, [addIndicatorButton, this]() {
         auto page = new QDialog(this);
         auto pageLayout = new QVBoxLayout(page);
         pageLayout->addWidget(new QLabel("Name"));
@@ -135,7 +139,7 @@ MainWidget::MainWidget(QWidget* parent) :
         pageLayout->addWidget(expressionEdit);
 
         auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Save, page);
-        connect(buttonBox, &QDialogButtonBox::accepted, page, [this, nameEdit, expressionEdit, page]() {
+        connect(buttonBox, &QDialogButtonBox::accepted, page, [this, addIndicatorButton, nameEdit, expressionEdit, page]() {
             if (!nameEdit->text().isEmpty() && !expressionEdit->toPlainText().isEmpty()) {
                 try {
                     auto indicator = prescyengine::StockIndicator(nameEdit->text().toStdString(), expressionEdit->toPlainText().toStdString());
@@ -146,20 +150,23 @@ MainWidget::MainWidget(QWidget* parent) :
                                         return indicator.name == nameEdit->text().toStdString();
                                     })) {
                         QMessageBox::warning(this, "Invalid name", "Please use a unique indicator name.");
-                        _registry.updateIndicator(indicator);
-                        updateIndicatorInTable(indicator);
                     } else {
                         _registry.addIndicator(indicator);
-                        addIndicatorToTable(indicator);
                     }
+                    rebuildTable();
                     page->close();
+                    addIndicatorButton->setEnabled(true);
                 } catch (prescyengine::PrescyException& e) {
                     QMessageBox::warning(this, "Error updating registry: ", e.what());
                 }
             }
         });
+        connect(buttonBox, &QDialogButtonBox::rejected, page, [addIndicatorButton]() {
+            addIndicatorButton->setEnabled(true);
+        });
         pageLayout->addWidget(buttonBox);
         page->setLayout(pageLayout);
+        addIndicatorButton->setEnabled(false);
         page->show();
     });
 
@@ -170,11 +177,10 @@ MainWidget::MainWidget(QWidget* parent) :
         if (_stocksTable.currentColumn() > 0) {
             try {
                 _registry.removeIndicator(_stocksTable.horizontalHeaderItem(_stocksTable.currentColumn())->text().toStdString());
+                rebuildTable();
             } catch (prescyengine::PrescyException& e) {
                 QMessageBox::warning(this, "Error updating registry: ", e.what());
             }
-            _stocksTable.removeColumn(_stocksTable.currentColumn());
-            _stocksTable.horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
         }
     });
 
@@ -183,8 +189,7 @@ MainWidget::MainWidget(QWidget* parent) :
     connect(timer, &QTimer::timeout, this, [lastRefreshedLabel, this]() {
         if (_elapsedTime == 5) {
             lastRefreshedLabel->setText("Querying...");
-            refresh();
-            _elapsedTime = 0;
+             performQueries();
         }
         _elapsedTime++;
         lastRefreshedLabel->setText(QString::fromStdString(fmt::format("Refreshed {}s ago", _elapsedTime)));
@@ -199,20 +204,15 @@ MainWidget::MainWidget(QWidget* parent) :
     layout->setAlignment(lastRefreshedLabel, Qt::AlignRight);
     layout->addWidget(&_stocksTable, 1, 0, -1, -1);
 
-    _stocksTable.setColumnCount(1);
-    _stocksTable.setHorizontalHeaderLabels(QStringList{"Stock Information"});
-    _stocksTable.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     _stocksTable.verticalHeader()->hide();
     _stocksTable.setShowGrid(false);
     _stocksTable.setFocusPolicy(Qt::NoFocus);
 
+    rebuildTable();
+
     try {
         for (const auto& query : _registry.stockQueries()) {
-            addStockToTable(query);
             _dataSource.addQuery(query);
-        }
-        for (const auto& indicator : _registry.indicators()) {
-            addIndicatorToTable(indicator);
         }
     } catch (prescyengine::PrescyException& e) {
         QMessageBox::warning(this, "Error reading registry: ", e.what());
@@ -221,56 +221,55 @@ MainWidget::MainWidget(QWidget* parent) :
     timer->start(1000);
 }
 
-void MainWidget::addStockToTable(const prescyengine::StockQuery& query) {
-    auto stockListEntry = new StockListEntry(query.symbol, _companyNames[query.symbol], query.range, this);
-    _stocksTable.insertRow(_stocksTable.rowCount());
-    _stocksTable.setRowHeight(_stocksTable.rowCount() - 1, 100);
-    _stocksTable.setCellWidget(_stocksTable.rowCount() - 1, 0, stockListEntry);
-}
+void MainWidget::rebuildTable() {
+    try {
+        _stocksTable.clear();
 
-void MainWidget::addIndicatorToTable(const prescyengine::StockIndicator& indicator) {
-    _stocksTable.insertColumn(_stocksTable.columnCount());
-    _stocksTable.setHorizontalHeaderItem(_stocksTable.columnCount() - 1, new QTableWidgetItem(QString::fromStdString(indicator.name)));
-    _stocksTable.horizontalHeader()->setSectionResizeMode(_stocksTable.columnCount() - 1, QHeaderView::Fixed);
+        _stocksTable.setRowCount(static_cast<int>(_registry.stockQueries().size()));
+        _stocksTable.setColumnCount(static_cast<int>(_registry.indicators().size() + 1));
 
-    for (auto row = 0; row < _stocksTable.rowCount(); ++row) {
-        auto indicatorEntry = new IndicatorThumbnail(indicator.name, indicator.threshold, this);
-        _stocksTable.setCellWidget(row, _stocksTable.columnCount() - 1, indicatorEntry);
-    }
+        _stocksTable.setHorizontalHeaderItem(0, new QTableWidgetItem("Stock"));
+        _stocksTable.horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
 
-    _stocksTable.resizeColumnsToContents();
-    _stocksTable.horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-}
-
-void MainWidget::updateIndicatorInTable(const prescyengine::StockIndicator &indicator) {
-    for (auto col = 1; col < _stocksTable.columnCount(); ++col) {
-        if (_stocksTable.horizontalHeaderItem(col)->text().toStdString() == indicator.name) {
-            for (auto row = 0; row < _stocksTable.rowCount(); ++row) {
-                auto thumbnail = qobject_cast<IndicatorThumbnail*>(_stocksTable.cellWidget(row, col));
-                thumbnail->setThreshold(indicator.threshold);
+        auto i = 0;
+        for (const auto& query : _registry.stockQueries()) {
+            _stocksTable.setRowHeight(i, 100);
+            _stocksTable.setCellWidget(i, 0, new StockListEntry(query.symbol, _companyNames[query.symbol], query.range, this));
+            auto j = 0;
+            for (const auto& indicator : _registry.indicators()) {
+                if (i == 0) {
+                    _stocksTable.setHorizontalHeaderItem(j + 1, new QTableWidgetItem(QString::fromStdString(indicator.name)));
+                    _stocksTable.horizontalHeader()->setSectionResizeMode(j + 1, QHeaderView::Fixed);
+                }
+                _stocksTable.setCellWidget(i, j + 1, new IndicatorThumbnail(indicator.name, indicator.expression, indicator.threshold, this));
+                ++j;
             }
+            ++i;
         }
+    } catch (prescyengine::PrescyException& e) {
+        QMessageBox::warning(this, "Error reading registry: ", e.what());
     }
+    performQueries();
 }
 
-void MainWidget::refresh() {
-    _dataSource.performQueries();
-    auto indicators = _registry.indicators();
-    for (auto i = 0; i < _stocksTable.rowCount(); ++i) {
-        auto entry = qobject_cast<StockListEntry*>(_stocksTable.cellWidget(i, 0));
-        try {
+void MainWidget::performQueries() {
+    try {
+        _dataSource.performQueries();
+        for (auto i = 0; i < _stocksTable.rowCount(); ++i) {
+            auto entry = qobject_cast<StockListEntry*>(_stocksTable.cellWidget(i, 0));
             auto data = _dataSource.data(prescyengine::StockQuery{entry->symbol(), entry->range()});
             entry->setData(data);
             entry->repaint();
-            for (auto j = 0; j < _stocksTable.columnCount() - 1; ++j) {
-                auto result = prescyengine::evaluateExpression(data, indicators[j].expression);
-                auto thumbnail = qobject_cast<IndicatorThumbnail*>(_stocksTable.cellWidget(i, j + 1));
-                thumbnail->setValue(result);
+            for (auto j = 1; j < _stocksTable.columnCount(); ++j) {
+                auto expression =  qobject_cast<IndicatorThumbnail*>(_stocksTable.cellWidget(i, j))->expression();
+                auto result = prescyengine::evaluateExpression(data, expression);
+                qobject_cast<IndicatorThumbnail*>(_stocksTable.cellWidget(i, j))->setValue(result);
             }
-        } catch (prescyengine::PrescyException& e) {
-            qDebug("%s\n", e.what());
         }
+    } catch (prescyengine::PrescyException& e) {
+        qDebug("%s\n", e.what());
     }
+    _elapsedTime = 0;
 }
 
 }
