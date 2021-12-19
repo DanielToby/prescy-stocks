@@ -189,7 +189,7 @@ MainWidget::MainWidget(QWidget* parent) :
     connect(timer, &QTimer::timeout, this, [lastRefreshedLabel, this]() {
         if (_elapsedTime == 5) {
             lastRefreshedLabel->setText("Querying...");
-             performQueries();
+             refreshTable();
         }
         _elapsedTime++;
         lastRefreshedLabel->setText(QString::fromStdString(fmt::format("Refreshed {}s ago", _elapsedTime)));
@@ -208,8 +208,6 @@ MainWidget::MainWidget(QWidget* parent) :
     _stocksTable.setShowGrid(false);
     _stocksTable.setFocusPolicy(Qt::NoFocus);
 
-    rebuildTable();
-
     try {
         for (const auto& query : _registry.stockQueries()) {
             _dataSource.addQuery(query);
@@ -217,6 +215,8 @@ MainWidget::MainWidget(QWidget* parent) :
     } catch (prescyengine::PrescyException& e) {
         QMessageBox::warning(this, "Error reading registry: ", e.what());
     }
+
+    rebuildTable();
 
     timer->start(1000);
 }
@@ -235,13 +235,13 @@ void MainWidget::rebuildTable() {
         for (const auto& query : _registry.stockQueries()) {
             _stocksTable.setRowHeight(i, 100);
             _stocksTable.setCellWidget(i, 0, new StockListEntry(query.symbol, _companyNames[query.symbol], query.range, this));
-            auto j = 0;
+            auto j = 1;
             for (const auto& indicator : _registry.indicators()) {
                 if (i == 0) {
-                    _stocksTable.setHorizontalHeaderItem(j + 1, new QTableWidgetItem(QString::fromStdString(indicator.name)));
-                    _stocksTable.horizontalHeader()->setSectionResizeMode(j + 1, QHeaderView::Fixed);
+                    _stocksTable.setHorizontalHeaderItem(j, new QTableWidgetItem(QString::fromStdString(indicator.name)));
+                    _stocksTable.horizontalHeader()->setSectionResizeMode(j, QHeaderView::Fixed);
                 }
-                _stocksTable.setCellWidget(i, j + 1, new IndicatorThumbnail(indicator.name, indicator.expression, indicator.threshold, this));
+                _stocksTable.setCellWidget(i, j, new IndicatorThumbnail(indicator.name, indicator.expression, indicator.threshold, this));
                 ++j;
             }
             ++i;
@@ -249,10 +249,10 @@ void MainWidget::rebuildTable() {
     } catch (prescyengine::PrescyException& e) {
         QMessageBox::warning(this, "Error reading registry: ", e.what());
     }
-    performQueries();
+    refreshTable();
 }
 
-void MainWidget::performQueries() {
+void MainWidget::refreshTable() {
     try {
         _dataSource.performQueries();
         for (auto i = 0; i < _stocksTable.rowCount(); ++i) {

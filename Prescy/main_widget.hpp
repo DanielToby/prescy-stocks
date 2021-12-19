@@ -21,7 +21,7 @@ public:
 
 private:
     void rebuildTable();
-    void performQueries();
+    void refreshTable();
 
     QTableWidget _stocksTable;
     int _elapsedTime;
