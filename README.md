@@ -4,7 +4,7 @@
 
 ### **Multithreaded stock querying via curl**
 
-Stock data is pulled every ten seconds from the [Yahoo Finance API](https://finance.yahoo.com/quotes/API,Documentation/view/v1/). The work is distributed between available threads.
+Stock data is pulled every ten seconds from the [Yahoo Finance API](https://finance.yahoo.com/quotes/API,Documentation/view/v1/). The work is distributed among a variable number of threads.
 
 ### **Indicators using Lua expression evaluation**
 
