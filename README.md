@@ -1,6 +1,6 @@
 ## **A cross-platform live stock monitor with user-generated run-time evaluated indicators**
 
-![Demo](demo.mp4)
+![Demo](demo.gif)
 
 ### **Multithreaded stock querying via curl**
 
