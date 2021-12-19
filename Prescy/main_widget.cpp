@@ -62,8 +62,6 @@ MainWidget::MainWidget(QWidget* parent) :
         intervalEdit->addItem("1w");
         intervalEdit->addItem("1mo");
         intervalEdit->addItem("3mo");
-        intervalEdit->addItem("1yr");
-        intervalEdit->addItem("5yr");
         intervalEdit->setCurrentIndex(0);
 
         auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok, addStockDialog);

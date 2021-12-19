@@ -31,9 +31,7 @@ public:
         _intervals{{"1d", "1m"},
                    {"1w", "1h"},
                    {"1mo", "1d"},
-                   {"3mo", "1d"},
-                   {"1yr", "1d"},
-                   {"5yr", "1mo"}} {
+                   {"3mo", "1d"}} {
     }
 
     void addQuery(const StockQuery& query) {
